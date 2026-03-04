@@ -1,0 +1,31 @@
+# --- Janus - Git Ignore ---
+
+# Sensible (MAI committare questi!)
+.env
+credentials.json
+token.json
+
+# Stato e Log locali
+last_run.txt
+*.log
+processed_not_notified.json
+processed_notified.json
+feedback.json
+
+# Ambiente Python e Dipendenze
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Strumenti di sistema e IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Script locali/temporanei (opzionali)
+.poetrysync
+.pull
+/tmp/
+.deploy_config
