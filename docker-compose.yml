@@ -17,6 +17,8 @@ services:
       - ./processed_not_notified.json:/app/processed_not_notified.json
       - ./processed_notified.json:/app/processed_notified.json
       - ./feedback.json:/app/feedback.json
-      - ./feedback_template.csv:/app/feedback_template.csv
+
+      # Directory per file esportati (CSV, etc.)
+      - ./exports:/app/exports
     # Garantisce che il container rimanga attivo
     command: tail -f /dev/null

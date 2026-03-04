@@ -394,7 +394,12 @@ def export_feedback_template() -> None:
         print("❌ Nessun messaggio processato da esportare.")
         return
 
-    csv_file = "feedback_template.csv"
+    # Create exports directory if it doesn't exist
+    exports_dir = "exports"
+    if not os.path.exists(exports_dir):
+        os.makedirs(exports_dir)
+
+    csv_file = os.path.join(exports_dir, "feedback_template.csv")
 
     try:
         with open(csv_file, "w", newline="", encoding="utf-8") as f:
@@ -447,9 +452,14 @@ def import_feedback_from_csv(csv_file: str) -> None:
     """Import feedback from manually edited CSV file."""
     print(f"📥 Importazione Feedback da {csv_file}\n")
 
+    # Se il file non esiste, prova in exports/
     if not os.path.exists(csv_file):
-        print(f"❌ File non trovato: {csv_file}")
-        return
+        exports_path = os.path.join("exports", csv_file)
+        if os.path.exists(exports_path):
+            csv_file = exports_path
+        else:
+            print(f"❌ File non trovato: {csv_file}")
+            return
 
     try:
         imported_count = 0
