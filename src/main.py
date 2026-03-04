@@ -231,6 +231,12 @@ def run_janus() -> None:
 
             # Mark thread as read and add janus label
             gmail.mark_as_read(thread_id, Config.TARGET_LABEL)
+
+            # Archive non-priority emails (urgency 1-2)
+            if urgency <= 2:
+                gmail.archive_thread(thread_id)
+                print(f"  📦 Archiviato (non prioritario)")
+
             processed_count += 1
 
     # Send consolidated notification report

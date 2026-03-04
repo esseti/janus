@@ -512,6 +512,26 @@ class GmailClient:
             print(f"❌ Errore marcatura come letto: {error}")
             return False
 
+    def archive_thread(self, thread_id: str) -> bool:
+        """Archive a thread by removing it from INBOX.
+
+        Args:
+            thread_id: The thread ID to archive.
+
+        Returns:
+            True if successful, False otherwise.
+        """
+        try:
+            self.service.users().threads().modify(
+                userId="me",
+                id=thread_id,
+                body={"removeLabelIds": ["INBOX"]},
+            ).execute()
+            return True
+        except HttpError as error:
+            print(f"❌ Errore archiviazione: {error}")
+            return False
+
     def _get_or_create_label(self, label_name):
         labels = (
             self.service.users().labels().list(userId="me").execute().get("labels", [])
