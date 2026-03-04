@@ -21,9 +21,9 @@ if [ ! -f "$PROJECT_DIR/processed_not_notified.json" ]; then echo "[]" > "$PROJE
 if [ ! -f "$PROJECT_DIR/processed_notified.json" ]; then echo "[]" > "$PROJECT_DIR/processed_notified.json"; fi
 if [ ! -f "$PROJECT_DIR/feedback.json" ]; then echo "[]" > "$PROJECT_DIR/feedback.json"; fi
 
-# 3. Avvia il container tramite Docker Compose in background
-echo "🐳 Avvio del container Docker in background..."
-docker compose up -d
+# 3. Avvia il container tramite Docker Compose in background (con rebuild dell'immagine)
+echo "🐳 Ricostruzione e avvio del container Docker in background..."
+docker compose up -d --build
 
 # 4. Configura il crontab per interagire col container
 echo "🕒 Configurazione del Crontab (Cron job)..."
