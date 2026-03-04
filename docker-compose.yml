@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   janus:
@@ -10,12 +10,13 @@ services:
       - ./.env:/app/.env:ro
       - ./credentials.json:/app/credentials.json:ro
       - ./evaluation_rules.txt:/app/evaluation_rules.txt:ro
-      
+
       # File che lo script deve poter leggere e modificare (token, log, state)
       - ./token.json:/app/token.json
       - ./last_run.txt:/app/last_run.txt
       - ./processed_not_notified.json:/app/processed_not_notified.json
       - ./processed_notified.json:/app/processed_notified.json
       - ./feedback.json:/app/feedback.json
+      - ./feedback_template.csv:/app/feedback_template.csv
     # Garantisce che il container rimanga attivo
     command: tail -f /dev/null

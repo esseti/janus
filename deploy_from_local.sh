@@ -12,13 +12,18 @@ else
     read -p "Indirizzo del server SSH (es. pi@192.168.1.50): " REMOTE_HOST
     read -p "Cartella di destinazione sul server (es. /home/pi/janus): " REMOTE_DIR
     read -p "URL del repository Git (es. https://github.com/tuo-utente/janus.git): " GIT_REPO
+    read -p "Branch Git da usare (es. main): " GIT_BRANCH
     
-    echo "REMOTE_HOST="$REMOTE_HOST"" > "$CONFIG_FILE"
-    echo "REMOTE_DIR="$REMOTE_DIR"" >> "$CONFIG_FILE"
-    echo "GIT_REPO="$GIT_REPO"" >> "$CONFIG_FILE"
+    echo "REMOTE_HOST=$REMOTE_HOST" > "$CONFIG_FILE"
+    echo "REMOTE_DIR=$REMOTE_DIR" >> "$CONFIG_FILE"
+    echo "GIT_REPO=$GIT_REPO" >> "$CONFIG_FILE"
+    echo "GIT_BRANCH=$GIT_BRANCH" >> "$CONFIG_FILE"
     
     echo "✅ Configurazione salvata in $CONFIG_FILE"
 fi
+
+# Usa il branch da config, o default a "main" se non specificato
+GIT_BRANCH=${GIT_BRANCH:-master}
 
 echo "🚀 Inizio deployment remoto verso $REMOTE_HOST:$REMOTE_DIR"
 
@@ -33,7 +38,7 @@ ssh "$REMOTE_HOST" << EOF
         cd "$REMOTE_DIR"
         # Scarta eventuali modifiche locali non committate per evitare conflitti
         git reset --hard
-        git pull origin main
+        git pull origin $GIT_BRANCH
     fi
 EOF
 
