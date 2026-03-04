@@ -9,7 +9,7 @@ LOG_FILE="$PROJECT_DIR/janus_cron.log"
 
 # Crea entry per crontab usando direttamente il python del virtualenv
 CRON_ENTRY_MAIN="*/5 * * * * cd $PROJECT_DIR && $VENV_PYTHON -m src.main >> $LOG_FILE 2>&1"
-CRON_ENTRY_REPORT="0 * * * * cd $PROJECT_DIR && $VENV_PYTHON -m src.report >> $LOG_FILE 2>&1"
+CRON_ENTRY_REPORT="30 8,11,15,17 * * * cd $PROJECT_DIR && $VENV_PYTHON -m src.report >> $LOG_FILE 2>&1"
 
 echo "📝 Configurazione Crontab per Janus"
 echo "=================================="
@@ -19,7 +19,7 @@ echo ""
 echo "# Janus - Elaborazione email ogni 5 minuti"
 echo "$CRON_ENTRY_MAIN"
 echo ""
-echo "# Janus - Report messaggi processati ogni ora"
+echo "# Janus - Report messaggi processati alle 8:30, 11:30, 15:30, 17:30"
 echo "$CRON_ENTRY_REPORT"
 echo ""
 echo "Per installare:"

@@ -95,17 +95,7 @@ class Notifier:
             True if report sent successfully, False otherwise.
         """
         if not os.path.exists(Config.PROCESSED_LOG_FILE):
-            message = (
-                "📋 *Report Messaggi Processati*\n\n"
-                "Nessun messaggio processato da segnalare."
-            )
-            try:
-                response = requests.post(self.webhook_url, json={"text": message})
-                response.raise_for_status()
-                return True
-            except Exception as e:
-                print(f"❌ Errore invio report: {e}")
-                return False
+            return True
 
         try:
             with open(Config.PROCESSED_LOG_FILE, "r") as f:
@@ -115,51 +105,47 @@ class Notifier:
             return False
 
         if not log_data:
-            message = (
-                "📋 *Report Messaggi Processati*\n\n"
-                "Nessun messaggio processato da segnalare."
+            return True
+
+        message_parts = [
+            "📋 *Report Messaggi Processati (Urgenza ≤ 2)*\n",
+        ]
+
+        for entry in log_data:
+            subject = entry.get("subject", "N/A")
+            from_addr = entry.get("from", "N/A")
+            urgency = entry.get("urgency", 0)
+            analysis = entry.get("analysis", "N/A")
+            thread_id = entry.get("thread_id", "")
+
+            # Format urgency as stars
+            urgency_stars = self._format_urgency_stars(urgency)
+
+            # Create Gmail link
+            gmail_link = ""
+            if thread_id:
+                gmail_link = f"https://mail.google.com/mail/u/0/#inbox/{thread_id}"
+
+            # Compact format: TITOLO | DA | URGENZA | RECAP | LINK
+            recap = analysis[:60] + "..." if len(analysis) > 60 else analysis
+            link_text = f"<{gmail_link}|🔗>" if gmail_link else ""
+
+            message_parts.append(
+                f"{subject[:40]:<40} | {from_addr[:20]:<20} | {urgency_stars} | {recap:<60} | {link_text}"
             )
-        else:
-            message_parts = [
-                "📋 *Report Messaggi Processati (Urgenza ≤ 2)*\n",
-                f"Totale messaggi: {len(log_data)}\n",
-            ]
 
-            for i, entry in enumerate(log_data, 1):
-                timestamp = entry.get("timestamp", "N/A")
-                subject = entry.get("subject", "N/A")
-                from_addr = entry.get("from", "N/A")
-                to_addr = entry.get("to", "N/A")
-                classification = entry.get("classification", "N/A")
-                urgency = entry.get("urgency", 0)
-                analysis = entry.get("analysis", "N/A")
-                thread_id = entry.get("thread_id", "")
-
-                # Format urgency as stars
-                urgency_stars = self._format_urgency_stars(urgency)
-
-                # Create Gmail link
-                gmail_link = ""
-                if thread_id:
-                    gmail_link = f"https://mail.google.com/mail/u/0/#inbox/{thread_id}"
-
-                message_parts.append(f"\n{i}. *{subject}*")
-                message_parts.append(f"   • Da: {from_addr}")
-                message_parts.append(f"   • A: {to_addr}")
-                message_parts.append(
-                    f"   • Categoria: {classification} | Urgenza: {urgency_stars}"
-                )
-                message_parts.append(f"   • Analisi: {analysis}")
-                message_parts.append(f"   • Data: {timestamp[:16]}")
-                if gmail_link:
-                    message_parts.append(f"   • 🔗 <{gmail_link}|Apri in Gmail>")
-
-            message = "\n".join(message_parts)
+        message = "\n".join(message_parts)
 
         try:
             response = requests.post(self.webhook_url, json={"text": message})
             response.raise_for_status()
             print(f"✅ Report inviato ({len(log_data)} messaggi)")
+
+            # Clear the log file after successful send
+            with open(Config.PROCESSED_LOG_FILE, "w") as f:
+                json.dump([], f)
+            print(f"✅ File log svuotato")
+
             return True
         except Exception as e:
             print(f"❌ Errore invio report: {e}")
