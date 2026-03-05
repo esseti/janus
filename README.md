@@ -17,7 +17,7 @@ Janus è un assistente intelligente che monitora le tue email Gmail, le analizza
 
 ## Installazione
 ```bash
-poetry install
+uv sync
 ```
 
 ## Configurazione
@@ -32,6 +32,12 @@ POLLING_INTERVAL=600
 
 ## Avvio
 ```bash
-poetry run python -m src.main
+uv run python -m src.main
+```
+
+## Preview Template
+Per vedere come appaiono i messaggi in chat senza inviarli:
+```bash
+uv run python -m src.preview
 ```
 **Nota:** Al primo avvio si aprirà il browser per l'autenticazione OAuth2. Il token verrà salvato in `token.json`.

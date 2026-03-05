@@ -60,10 +60,10 @@ for file in .env credentials.json token.json; do
 done
 
 # 3. Esegui lo script di deploy direttamente sul server
-echo "⚙️  Avvio della configurazione di Docker e Cron sul server..."
+echo "⚙️  Avvio della configurazione di uv e Cron sul server..."
 ssh "$REMOTE_HOST" << EOF
     cd "$REMOTE_DIR"
-    chmod +x deploy_on_server.sh
+    chmod +x deploy_on_server.sh setup_cron.sh
     ./deploy_on_server.sh
 EOF
 

@@ -4,13 +4,18 @@
 
 # Path assoluti
 PROJECT_DIR="/Users/stefano/sw/chino/janus"
-VENV_PYTHON="/Users/stefano/.virtualenvs/janus/bin/python"
+UV_EXE=$(which uv)
 LOG_FILE="$PROJECT_DIR/janus_cron.log"
 
-# Crea entry per crontab usando direttamente il python del virtualenv
-CRON_ENTRY_MAIN_WEEKDAY="*/5 8-18 * * 1-5 cd $PROJECT_DIR && $VENV_PYTHON -m src.main >> $LOG_FILE 2>&1"
-CRON_ENTRY_MAIN_WEEKEND="*/30 8-18 * * 0,6 cd $PROJECT_DIR && $VENV_PYTHON -m src.main >> $LOG_FILE 2>&1"
-CRON_ENTRY_REPORT="30 8,11,15,17 * * * cd $PROJECT_DIR && $VENV_PYTHON -m src.report >> $LOG_FILE 2>&1"
+# Se uv non è nel path, prova a cercarlo in posti comuni
+if [ -z "$UV_EXE" ]; then
+    UV_EXE="$HOME/.cargo/bin/uv"
+fi
+
+# Crea entry per crontab usando uv run
+CRON_ENTRY_MAIN_WEEKDAY="*/5 8-18 * * 1-5 cd $PROJECT_DIR && $UV_EXE run python -m src.main >> $LOG_FILE 2>&1"
+CRON_ENTRY_MAIN_WEEKEND="*/30 8-18 * * 0,6 cd $PROJECT_DIR && $UV_EXE run python -m src.main >> $LOG_FILE 2>&1"
+CRON_ENTRY_REPORT="30 8,11,15,17 * * * cd $PROJECT_DIR && $UV_EXE run python -m src.report >> $LOG_FILE 2>&1"
 
 echo "📝 Configurazione Crontab per Janus"
 echo "=================================="

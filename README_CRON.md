@@ -22,10 +22,10 @@ crontab -e
 
 ```bash
 # Janus - Elaborazione email ogni 5 minuti
-*/5 * * * * cd /Users/stefano/sw/chino/janus && /Users/stefano/.virtualenvs/janus/bin/python -m src.main >> /Users/stefano/sw/chino/janus/janus_cron.log 2>&1
+*/5 * * * * cd /Users/stefano/sw/chino/janus && uv run python -m src.main >> /Users/stefano/sw/chino/janus/janus_cron.log 2>&1
 
 # Janus - Report messaggi processati ogni ora
-0 * * * * cd /Users/stefano/sw/chino/janus && /Users/stefano/.virtualenvs/janus/bin/python -m src.report >> /Users/stefano/sw/chino/janus/janus_cron.log 2>&1
+0 * * * * cd /Users/stefano/sw/chino/janus && uv run python -m src.report >> /Users/stefano/sw/chino/janus/janus_cron.log 2>&1
 ```
 
 3. Salva e chiudi (`:wq` in vim)
@@ -63,16 +63,16 @@ La configurazione di default include:
 
 ```bash
 # Elaborazione ogni 10 minuti invece di 5
-*/10 * * * * cd /Users/stefano/sw/chino/janus && /Users/stefano/.virtualenvs/janus/bin/python -m src.main >> /Users/stefano/sw/chino/janus/janus_cron.log 2>&1
+*/10 * * * * cd /Users/stefano/sw/chino/janus && uv run python -m src.main >> /Users/stefano/sw/chino/janus/janus_cron.log 2>&1
 
 # Report ogni 2 ore invece di 1
-0 */2 * * * cd /Users/stefano/sw/chino/janus && /Users/stefano/.virtualenvs/janus/bin/python -m src.report >> /Users/stefano/sw/chino/janus/janus_cron.log 2>&1
+0 */2 * * * cd /Users/stefano/sw/chino/janus && uv run python -m src.report >> /Users/stefano/sw/chino/janus/janus_cron.log 2>&1
 
 # Report solo alle 9, 13, 17 (orario lavorativo)
-0 9,13,17 * * 1-5 cd /Users/stefano/sw/chino/janus && /Users/stefano/.virtualenvs/janus/bin/python -m src.report >> /Users/stefano/sw/chino/janus/janus_cron.log 2>&1
+0 9,13,17 * * 1-5 cd /Users/stefano/sw/chino/janus && uv run python -m src.report >> /Users/stefano/sw/chino/janus/janus_cron.log 2>&1
 
 # Solo in orario lavorativo (9-18, lun-ven)
-*/5 9-18 * * 1-5 cd /Users/stefano/sw/chino/janus && /Users/stefano/.virtualenvs/janus/bin/python -m src.main >> /Users/stefano/sw/chino/janus/janus_cron.log 2>&1
+*/5 9-18 * * 1-5 cd /Users/stefano/sw/chino/janus && uv run python -m src.main >> /Users/stefano/sw/chino/janus/janus_cron.log 2>&1
 ```
 
 ### Rimuovere crontab
@@ -117,7 +117,7 @@ cd /Users/stefano/sw/chino/janus && /Users/stefano/.virtualenvs/janus/bin/python
 
 **ModuleNotFoundError?**
 
-Se vedi errori come `ModuleNotFoundError: No module named 'dotenv'`, significa che cron non sta usando il virtualenv corretto. Assicurati di usare il path completo del python del virtualenv (`/Users/stefano/.virtualenvs/janus/bin/python`) invece di `poetry run`.
+Se vedi errori come `ModuleNotFoundError: No module named 'dotenv'`, significa che cron non sta usando il virtualenv corretto. Assicurati di usare `uv run python` invece di chiamare direttamente `python`. `uv` si occuperà di creare e attivare il virtualenv automaticamente.
 
 **Verifica log rotation:**
 

@@ -1,0 +1,14 @@
+📬 *Riepilogo Email Urgenti* ({{ notifications|length }} messaggi)
+
+{% for notif in notifications -%}
+{{ loop.index }}. *{{ notif.subject }}*
+   👤 Da: {{ notif.from }}
+   🎯 A: {{ notif.to }}
+   {{ format_stars(notif.urgency) }} | {{ notif.classification }}
+   _{{ notif.analysis }}_
+   🔗 <https://mail.google.com/mail/u/0/#inbox/{{ notif.thread_id }}|Apri in Gmail>
+{% if notif.needs_reply and notif.draft_body -%}
+   📝 *Bozza:* {{ notif.draft_body[:300] }}{% if notif.draft_body|length > 300 %}...{% endif %}
+{%- endif %}
+
+{% endfor %}

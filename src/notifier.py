@@ -4,6 +4,7 @@ import json
 import os
 
 import requests
+from jinja2 import Environment, FileSystemLoader
 
 from .config import Config
 
@@ -12,8 +13,12 @@ class Notifier:
     """Notifier for sending email analysis to Google Chat."""
 
     def __init__(self) -> None:
-        """Initialize the notifier with Google Chat webhook URL."""
+        """Initialize the notifier with Google Chat webhook URL and templates."""
         self.webhook_url = str(Config.GOOGLE_CHAT_WEBHOOK)
+        # Setup Jinja2 environment
+        template_dir = os.path.join(os.path.dirname(__file__), "templates")
+        self.env = Environment(loader=FileSystemLoader(template_dir))
+        self.env.globals["format_stars"] = self._format_urgency_stars
 
     def _format_urgency_stars(self, urgency: int) -> str:
         """Format urgency level as filled and empty stars.
@@ -41,45 +46,10 @@ class Notifier:
         if not notifications:
             return True
 
-        message_parts = [
-            f"📬 Riepilogo Email Urgenti ({len(notifications)} messaggi)\n"
-        ]
-
-        for i, notif in enumerate(notifications, 1):
-            thread_id = notif["thread_id"]
-            subject = notif["subject"]
-            from_addr = notif["from"]
-            to_addr = notif["to"]
-            urgency = notif["urgency"]
-            classification = notif["classification"]
-            analysis = notif["analysis"]
-            needs_reply = notif["needs_reply"]
-            draft_body = notif["draft_body"]
-
-            # Format urgency as stars
-            urgency_stars = self._format_urgency_stars(urgency)
-
-            # Create Gmail link
-            gmail_link = f"https://mail.google.com/mail/u/0/#inbox/{thread_id}"
-
-            # Format message without bold for category
-            message_parts.append(f"\n{i}. {subject}")
-            message_parts.append(f"   Da: {from_addr}")
-            message_parts.append(f"   A: {to_addr}")
-            message_parts.append(f"   {urgency_stars} | {classification}")
-            message_parts.append(f"   {analysis}")
-            message_parts.append(f"   🔗 <{gmail_link}|Apri in Gmail>")
-
-            # Only add draft if addressed to Stefano (not stefano@chino.io)
-            if needs_reply and draft_body:
-                # Check if email is addressed to "Stefano" (not an email address)
-                # to_lower = to_addr.lower()
-                # if "stefano@chino.io" not in to_lower and "stefano" in to_lower:
-                message_parts.append(f"   📝 Bozza: {draft_body[:200]}...")
-
-        message = "\n".join(message_parts)
-
         try:
+            template = self.env.get_template("urgent_report.jinja")
+            message = template.render(notifications=notifications)
+
             response = requests.post(self.webhook_url, json={"text": message})
             response.raise_for_status()
             print(f"✅ Report consolidato inviato ({len(notifications)} email)")
@@ -107,36 +77,10 @@ class Notifier:
         if not log_data:
             return True
 
-        message_parts = [
-            "📋 *Report Messaggi Processati (Urgenza ≤ 2)*\n",
-        ]
-
-        for entry in log_data:
-            subject = entry.get("subject", "N/A")
-            from_addr = entry.get("from", "N/A")
-            urgency = entry.get("urgency", 0)
-            analysis = entry.get("analysis", "N/A")
-            thread_id = entry.get("thread_id", "")
-
-            # Format urgency as stars
-            urgency_stars = self._format_urgency_stars(urgency)
-
-            # Create Gmail link
-            gmail_link = ""
-            if thread_id:
-                gmail_link = f"https://mail.google.com/mail/u/0/#inbox/{thread_id}"
-
-            # Compact format: TITOLO | DA | URGENZA | RECAP | LINK
-            recap = analysis[:60] + "..." if len(analysis) > 60 else analysis
-            link_text = f"<{gmail_link}|🔗>" if gmail_link else ""
-
-            message_parts.append(
-                f"{subject[:40]:<40} | {from_addr[:20]:<20} | {urgency_stars} | {recap:<60} | {link_text}"
-            )
-
-        message = "\n".join(message_parts)
-
         try:
+            template = self.env.get_template("processed_report.jinja")
+            message = template.render(log_data=log_data)
+
             response = requests.post(self.webhook_url, json={"text": message})
             response.raise_for_status()
             print(f"✅ Report inviato ({len(log_data)} messaggi)")
