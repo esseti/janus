@@ -501,11 +501,13 @@ class GmailClient:
         """
         try:
             label_id = self._get_or_create_label(target_label)
+            # "removeLabelIds": ["UNREAD"],
+            body = {"addLabelIds": [label_id]}
 
             self.service.users().threads().modify(
                 userId="me",
                 id=thread_id,
-                body={"removeLabelIds": ["UNREAD"], "addLabelIds": [label_id]},
+                body=body,
             ).execute()
             return True
         except HttpError as error:
