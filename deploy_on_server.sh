@@ -33,7 +33,7 @@ if [ ! -f "$PROJECT_DIR/feedback.json" ]; then echo "[]" > "$PROJECT_DIR/feedbac
 
 # 5. Configura il crontab
 echo "🕒 Configurazione del Crontab..."
-./setup_cron.sh
+./setup_cron.sh "$PROJECT_DIR"
 
 # 6. Configurazione Logrotate nello spazio utente
 echo "🔄 Configurazione Logrotate..."

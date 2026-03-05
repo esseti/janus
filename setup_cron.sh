@@ -1,11 +1,12 @@
 #!/bin/bash
 # Script per configurare crontab per Janus
-# Esegue il comando ogni 5 minuti
+# Accetta PROJECT_DIR come parametro, altrimenti usa la directory corrente
+
+PROJECT_DIR="${1:-.}"
+LOG_FILE="$PROJECT_DIR/janus_cron.log"
 
 # Path assoluti
-PROJECT_DIR="/Users/stefano/sw/chino/janus"
 UV_EXE=$(which uv)
-LOG_FILE="$PROJECT_DIR/janus_cron.log"
 
 # Se uv non è nel path, prova a cercarlo in posti comuni
 if [ -z "$UV_EXE" ]; then
