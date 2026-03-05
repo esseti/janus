@@ -11,7 +11,7 @@ last_run.txt
 processed_not_notified.json
 processed_notified.json
 feedback.json
-
+mailing_list.json
 # Ambiente Python e Dipendenze
 .venv/
 __pycache__/
