@@ -113,7 +113,8 @@ def run_janus() -> None:
     4. Send notification only if urgency > 2
     5. Mark as read and save timestamp
     """
-    print("🚀 Inizializzazione Janus...")
+    start_time = datetime.now()
+    print(f"🚀 Inizializzazione Janus... [{start_time.strftime('%Y-%m-%d %H:%M:%S')}]")
     try:
         Config.validate()
     except Exception as e:
@@ -128,7 +129,8 @@ def run_janus() -> None:
     messages = gmail.get_unread_messages_since_last_run(Config.TARGET_LABEL)
 
     if not messages:
-        print("✅ Nessun nuovo messaggio da processare.")
+        end_time = datetime.now()
+        print(f"✅ Nessun nuovo messaggio da processare. [{end_time.strftime('%Y-%m-%d %H:%M:%S')}]")
         gmail._save_last_run_timestamp()
         return
 
@@ -180,7 +182,8 @@ def run_janus() -> None:
         print(f"📧 {mailing_list_count} messaggi da mailing list archiviati")
 
     if not filtered_messages:
-        print("✅ Nessun messaggio rilevante dopo il filtro.")
+        end_time = datetime.now()
+        print(f"✅ Nessun messaggio rilevante dopo il filtro. [{end_time.strftime('%Y-%m-%d %H:%M:%S')}]")
         gmail._save_last_run_timestamp()
         return
 
@@ -304,8 +307,9 @@ def run_janus() -> None:
     # Save timestamp for next run
     gmail._save_last_run_timestamp()
 
+    end_time = datetime.now()
     print(f"\n{'=' * 60}")
-    print(f"✅ Elaborazione completata:")
+    print(f"✅ Elaborazione completata [{end_time.strftime('%Y-%m-%d %H:%M:%S')}]:")
     print(f"   • Thread processati: {processed_count}")
     print(f"   • Notifiche inviate: {notified_count}")
 
