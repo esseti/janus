@@ -31,27 +31,12 @@ echo ""
 echo "# Janus - Report messaggi processati alle 8:30, 11:30, 15:30, 17:30"
 echo "$CRON_ENTRY_REPORT"
 echo ""
-echo "Per installare:"
-echo "1. Apri crontab: crontab -e"
-echo "2. Aggiungi le righe sopra"
-echo "3. Salva e chiudi"
-echo ""
-echo "Per verificare: crontab -l"
-echo "Per vedere i log: tail -f $LOG_FILE"
-echo ""
-echo "Vuoi aggiungere automaticamente? (y/n)"
-read -r response
+# Backup crontab esistente
+crontab -l > /tmp/crontab_backup_$(date +%Y%m%d_%H%M%S) 2>/dev/null || true
 
-if [[ "$response" =~ ^[Yy]$ ]]; then
-    # Backup crontab esistente
-    crontab -l > /tmp/crontab_backup_$(date +%Y%m%d_%H%M%S) 2>/dev/null || true
-    
-    # Aggiungi entry se non esistono già
-    (crontab -l 2>/dev/null | grep -v "janus"; echo "# Janus - Elaborazione email ogni 5 minuti (Lun-Ven 8-18)"; echo "$CRON_ENTRY_MAIN_WEEKDAY"; echo "# Janus - Elaborazione email ogni 30 minuti (Sab-Dom 8-18)"; echo "$CRON_ENTRY_MAIN_WEEKEND"; echo "# Janus - Report messaggi processati alle 8:30, 11:30, 15:30, 17:30"; echo "$CRON_ENTRY_REPORT") | crontab -
-    
-    echo "✅ Crontab configurato!"
-    echo "📋 Crontab attuale:"
-    crontab -l
-else
-    echo "❌ Configurazione annullata. Aggiungi manualmente le righe sopra."
-fi
+# Aggiungi entry se non esistono già
+(crontab -l 2>/dev/null | grep -v "janus"; echo "# Janus - Elaborazione email ogni 5 minuti (Lun-Ven 8-18)"; echo "$CRON_ENTRY_MAIN_WEEKDAY"; echo "# Janus - Elaborazione email ogni 30 minuti (Sab-Dom 8-18)"; echo "$CRON_ENTRY_MAIN_WEEKEND"; echo "# Janus - Report messaggi processati alle 8:30, 11:30, 15:30, 17:30"; echo "$CRON_ENTRY_REPORT") | crontab -
+
+echo "✅ Crontab configurato!"
+echo "📋 Crontab attuale:"
+crontab -l
