@@ -17,6 +17,7 @@ fi
 CRON_ENTRY_MAIN_WEEKDAY="*/5 8-18 * * 1-5 cd $PROJECT_DIR && $UV_EXE run python -m src.main >> $LOG_FILE 2>&1"
 CRON_ENTRY_MAIN_WEEKEND="*/30 8-18 * * 0,6 cd $PROJECT_DIR && $UV_EXE run python -m src.main >> $LOG_FILE 2>&1"
 CRON_ENTRY_REPORT="30 8,11,15,17 * * * cd $PROJECT_DIR && $UV_EXE run python -m src.report >> $LOG_FILE 2>&1"
+CRON_ENTRY_MAILING_LIST="45 11,17 * * 1-5 cd $PROJECT_DIR && $UV_EXE run python -m src.report_mailing_list >> $LOG_FILE 2>&1"
 
 echo "📝 Configurazione Crontab per Janus"
 echo "=================================="
@@ -32,11 +33,14 @@ echo ""
 echo "# Janus - Report messaggi processati alle 8:30, 11:30, 15:30, 17:30"
 echo "$CRON_ENTRY_REPORT"
 echo ""
+echo "# Janus - Report mailing list alle 11:45 e 17:45 (Lun-Ven)"
+echo "$CRON_ENTRY_MAILING_LIST"
+echo ""
 # Backup crontab esistente
 crontab -l > /tmp/crontab_backup_$(date +%Y%m%d_%H%M%S) 2>/dev/null || true
 
 # Aggiungi entry se non esistono già
-(crontab -l 2>/dev/null | grep -v "janus"; echo "# Janus - Elaborazione email ogni 5 minuti (Lun-Ven 8-18)"; echo "$CRON_ENTRY_MAIN_WEEKDAY"; echo "# Janus - Elaborazione email ogni 30 minuti (Sab-Dom 8-18)"; echo "$CRON_ENTRY_MAIN_WEEKEND"; echo "# Janus - Report messaggi processati alle 8:30, 11:30, 15:30, 17:30"; echo "$CRON_ENTRY_REPORT") | crontab -
+(crontab -l 2>/dev/null | grep -v "janus"; echo "# Janus - Elaborazione email ogni 5 minuti (Lun-Ven 8-18)"; echo "$CRON_ENTRY_MAIN_WEEKDAY"; echo "# Janus - Elaborazione email ogni 30 minuti (Sab-Dom 8-18)"; echo "$CRON_ENTRY_MAIN_WEEKEND"; echo "# Janus - Report messaggi processati alle 8:30, 11:30, 15:30, 17:30"; echo "$CRON_ENTRY_REPORT"; echo "# Janus - Report mailing list alle 11:45 e 17:45 (Lun-Ven)"; echo "$CRON_ENTRY_MAILING_LIST") | crontab -
 
 echo "✅ Crontab configurato!"
 echo "📋 Crontab attuale:"

@@ -22,6 +22,7 @@ class Config:
     NOTIFIED_LOG_FILE = "processed_notified.json"
     FEEDBACK_FILE = "feedback.json"
     RULES_FILE = "evaluation_rules.txt"
+    MAILING_LIST_LOG_FILE = "mailing_list.json"
 
     @classmethod
     def validate(cls) -> None:

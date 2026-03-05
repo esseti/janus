@@ -30,6 +30,7 @@ touch "$PROJECT_DIR/last_run.txt"
 if [ ! -f "$PROJECT_DIR/processed_not_notified.json" ]; then echo "[]" > "$PROJECT_DIR/processed_not_notified.json"; fi
 if [ ! -f "$PROJECT_DIR/processed_notified.json" ]; then echo "[]" > "$PROJECT_DIR/processed_notified.json"; fi
 if [ ! -f "$PROJECT_DIR/feedback.json" ]; then echo "[]" > "$PROJECT_DIR/feedback.json"; fi
+if [ ! -f "$PROJECT_DIR/mailing_list.json" ]; then echo "[]" > "$PROJECT_DIR/mailing_list.json"; fi
 
 # 5. Configura il crontab
 echo "🕒 Configurazione del Crontab..."

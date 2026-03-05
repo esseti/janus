@@ -65,6 +65,44 @@ def _log_processed_message(
         json.dump(log_data, f, indent=2, ensure_ascii=False)
 
 
+def _log_mailing_list_message(
+    thread_id: str,
+    subject: str,
+    from_addr: str,
+) -> None:
+    """Log mailing list messages to separate file.
+
+    Args:
+        thread_id: The thread ID.
+        subject: Email subject.
+        from_addr: Email sender address.
+    """
+    import os
+
+    log_entry = {
+        "timestamp": datetime.now().isoformat(),
+        "thread_id": thread_id,
+        "subject": subject,
+        "from": from_addr,
+    }
+
+    # Read existing log
+    log_data = []
+    if os.path.exists(Config.MAILING_LIST_LOG_FILE):
+        try:
+            with open(Config.MAILING_LIST_LOG_FILE, "r") as f:
+                log_data = json.load(f)
+        except (json.JSONDecodeError, FileNotFoundError):
+            log_data = []
+
+    # Append new entry
+    log_data.append(log_entry)
+
+    # Write back
+    with open(Config.MAILING_LIST_LOG_FILE, "w") as f:
+        json.dump(log_data, f, indent=2, ensure_ascii=False)
+
+
 def run_janus() -> None:
     """Orchestrate Gmail LLM processing workflow with new logic.
 
@@ -97,15 +135,28 @@ def run_janus() -> None:
     # Filter messages where user is recipient and sender is not no-reply
     print(f"🔍 Filtro messaggi dove {Config.USER_EMAIL} è destinatario...")
     filtered_messages = []
+    mailing_list_count = 0
+
     for msg in messages:
         msg_id = msg["id"]
+        thread_id = msg["threadId"]
 
         # Check if sender is valid (not no-reply)
         if not gmail.is_valid_sender(msg_id):
-            print(
-                f"  ⏭️  Saltato messaggio {msg_id[:8]}... "
-                f"(mittente no-reply/mailing list)"
-            )
+            # Get message info for logging
+            is_recipient, msg_info = gmail.is_user_recipient(msg_id, Config.USER_EMAIL)
+            from_addr = msg_info.get("from", "N/A")
+            subject = msg_info.get("subject", "N/A")
+
+            print(f"  📧 Mailing list {msg_id[:8]}... ({from_addr})")
+
+            # Log mailing list message
+            _log_mailing_list_message(thread_id, subject, from_addr)
+
+            # Add janus-ml label and archive
+            gmail.mark_as_read(thread_id, "janus-ml")
+            gmail.archive_thread(thread_id)
+            mailing_list_count += 1
             continue
 
         # Check if user is in To/CC
@@ -124,6 +175,9 @@ def run_janus() -> None:
                 f"      A: {to_addr}\n"
                 f"      Oggetto: {subject}"
             )
+
+    if mailing_list_count > 0:
+        print(f"📧 {mailing_list_count} messaggi da mailing list archiviati")
 
     if not filtered_messages:
         print("✅ Nessun messaggio rilevante dopo il filtro.")
