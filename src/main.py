@@ -130,7 +130,9 @@ def run_janus() -> None:
 
     if not messages:
         end_time = datetime.now()
-        print(f"✅ Nessun nuovo messaggio da processare. [{end_time.strftime('%Y-%m-%d %H:%M:%S')}]")
+        print(
+            f"✅ Nessun nuovo messaggio da processare. [{end_time.strftime('%Y-%m-%d %H:%M:%S')}]"
+        )
         gmail._save_last_run_timestamp()
         return
 
@@ -183,7 +185,9 @@ def run_janus() -> None:
 
     if not filtered_messages:
         end_time = datetime.now()
-        print(f"✅ Nessun messaggio rilevante dopo il filtro. [{end_time.strftime('%Y-%m-%d %H:%M:%S')}]")
+        print(
+            f"✅ Nessun messaggio rilevante dopo il filtro. [{end_time.strftime('%Y-%m-%d %H:%M:%S')}]"
+        )
         gmail._save_last_run_timestamp()
         return
 

@@ -43,9 +43,9 @@ def send_mailing_list_report() -> bool:
         # Compact format: MITTENTE | TITOLO | LINK
         link_text = f"<{gmail_link}|🔗>" if gmail_link else ""
 
-        message_parts.append(f"{from_addr[:40]:<40} | {subject[:50]:<50} | {link_text}")
+        message_parts.append(f"{subject[:50]} | {from_addr[:40]}  | {link_text}")
 
-    message = "\n".join(message_parts)
+    message = "\n - ".join(message_parts)
 
     try:
         webhook_url = str(Config.GOOGLE_CHAT_WEBHOOK)
