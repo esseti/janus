@@ -4,10 +4,10 @@ import os
 from typing import Optional, List
 
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_google_genai import ChatGoogleGenerativeAI
 from pydantic import BaseModel, Field
 
 from .config import Config
+from .llm_factory import create_llm
 
 
 class EmailAnalysis(BaseModel):
@@ -42,15 +42,11 @@ class BatchEmailAnalysis(BaseModel):
 
 
 class LLMProcessor:
-    """Processor for analyzing email threads using Google Gemini."""
+    """Processor for analyzing email threads using configurable LLM provider."""
 
     def __init__(self) -> None:
-        """Initialize the LLM processor with Gemini Flash Latest model."""
-        self.llm = ChatGoogleGenerativeAI(
-            model="gemini-3-flash-preview",
-            api_key=Config.GEMINI_API_KEY,
-            temperature=0.3,
-        )
+        """Initialize the LLM processor with configured provider and model."""
+        self.llm = create_llm()
         self.structured_llm = self.llm.with_structured_output(EmailAnalysis)
         self.batch_structured_llm = self.llm.with_structured_output(BatchEmailAnalysis)
         self.custom_rules = self._load_custom_rules()

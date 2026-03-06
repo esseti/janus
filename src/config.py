@@ -10,7 +10,11 @@ load_dotenv()
 class Config:
     """Configuration for Janus email processor."""
 
+    LLM_PROVIDER = os.getenv("LLM_PROVIDER", "gemini")
+    LLM_MODEL = os.getenv("LLM_MODEL", "gemini-3-flash-preview")
+    LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0.3"))
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+    OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     GOOGLE_CHAT_WEBHOOK = os.getenv("GOOGLE_CHAT_WEBHOOK")
     USER_EMAIL = os.getenv("USER_EMAIL")
     TARGET_LABEL = os.getenv("TARGET_LABEL", "janus")
@@ -32,7 +36,7 @@ class Config:
             ValueError: If required config values are missing.
             FileNotFoundError: If credentials file not found.
         """
-        if not cls.GEMINI_API_KEY:
+        if cls.LLM_PROVIDER == "gemini" and not cls.GEMINI_API_KEY:
             raise ValueError("GEMINI_API_KEY is missing in .env")
         if not cls.GOOGLE_CHAT_WEBHOOK:
             raise ValueError("GOOGLE_CHAT_WEBHOOK is missing in .env")
