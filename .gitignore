@@ -29,3 +29,5 @@ Thumbs.db
 .pull
 /tmp/
 .deploy_config
+excluded_senders.txt
+evaluation_rules.txt
