@@ -3,6 +3,8 @@ from __future__ import annotations
 import base64
 import os.path
 from datetime import datetime, timedelta
+from fnmatch import fnmatch
+from pathlib import Path
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -23,6 +25,65 @@ class GmailClient:
         """Initialize Gmail client with authentication."""
         self.creds = self._authenticate()
         self.service = build("gmail", "v1", credentials=self.creds)
+        self.excluded_senders = self._load_excluded_senders()
+
+    def _load_excluded_senders(self) -> list[str]:
+        """Load excluded sender patterns from configuration file.
+
+        Returns:
+            List of email patterns to exclude (lowercase).
+        """
+        excluded_file = Path("excluded_senders.txt")
+        if not excluded_file.exists():
+            return []
+
+        excluded = []
+        try:
+            with open(excluded_file, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    # Skip empty lines and comments
+                    if line and not line.startswith("#"):
+                        excluded.append(line.lower())
+
+            if excluded:
+                print(f"📋 Caricati {len(excluded)} pattern di mittenti esclusi")
+            return excluded
+        except Exception as e:
+            print(f"⚠️ Errore caricamento excluded_senders.txt: {e}")
+            return []
+
+    def _is_excluded_sender(self, from_header: str) -> bool:
+        """Check if sender matches any excluded pattern.
+
+        Supports glob-style patterns with * and ? wildcards:
+        - * matches any sequence of characters
+        - ? matches any single character
+        - Exact substring match if no wildcards present
+
+        Args:
+            from_header: The From header value.
+
+        Returns:
+            True if sender should be excluded, False otherwise.
+        """
+        if not self.excluded_senders:
+            return False
+
+        from_lower = from_header.lower()
+
+        for pattern in self.excluded_senders:
+            # Check if pattern contains wildcards
+            if "*" in pattern or "?" in pattern:
+                # Use glob-style matching
+                if fnmatch(from_lower, pattern):
+                    return True
+            else:
+                # Use substring matching for backward compatibility
+                if pattern in from_lower:
+                    return True
+
+        return False
 
     def _get_last_run_timestamp(self) -> str | None:
         """Get timestamp of last run from file.
@@ -336,13 +397,13 @@ class GmailClient:
             return False, {}
 
     def is_valid_sender(self, message_id: str) -> bool:
-        """Check if sender is not a no-reply or mailing list.
+        """Check if sender is not a no-reply, mailing list, or excluded.
 
         Args:
             message_id: The message ID to check.
 
         Returns:
-            True if sender is valid (not no-reply), False otherwise.
+            True if sender is valid (not no-reply or excluded), False otherwise.
         """
         try:
             msg = (
@@ -363,6 +424,9 @@ class GmailClient:
             )
 
             if self._is_noreply_sender(from_header):
+                return False
+
+            if self._is_excluded_sender(from_header):
                 return False
 
             return True

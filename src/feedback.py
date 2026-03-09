@@ -7,6 +7,7 @@ import csv
 import json
 import os
 from datetime import datetime
+from pathlib import Path
 
 from .config import Config
 
@@ -59,6 +60,46 @@ def _load_processed_log() -> list[dict]:
     return unique_messages
 
 
+def _add_sender_to_excluded(sender_email: str) -> bool:
+    """Add sender email to excluded_senders.txt file.
+
+    Args:
+        sender_email: The email address to add to exclusion list.
+
+    Returns:
+        True if successfully added, False otherwise.
+    """
+    excluded_file = Path("excluded_senders.txt")
+
+    try:
+        # Read existing entries
+        existing_entries = []
+        if excluded_file.exists():
+            with open(excluded_file, "r", encoding="utf-8") as f:
+                existing_entries = [
+                    line.strip().lower()
+                    for line in f
+                    if line.strip() and not line.startswith("#")
+                ]
+
+        # Check if already exists
+        sender_lower = sender_email.lower()
+        if sender_lower in existing_entries:
+            print(f"ℹ️  '{sender_email}' già presente in excluded_senders.txt")
+            return True
+
+        # Append to file
+        with open(excluded_file, "a", encoding="utf-8") as f:
+            f.write(f"{sender_email}\n")
+
+        print(f"✅ '{sender_email}' aggiunto a excluded_senders.txt")
+        return True
+
+    except Exception as e:
+        print(f"❌ Errore aggiunta sender a excluded_senders.txt: {e}")
+        return False
+
+
 def _save_feedback(
     thread_id: str,
     subject: str,
@@ -67,6 +108,8 @@ def _save_feedback(
     original_classification: str,
     correct_classification: str,
     notes: str,
+    add_to_excluded: bool = False,
+    sender_email: str = "",
 ) -> None:
     """Save feedback to file.
 
@@ -78,6 +121,8 @@ def _save_feedback(
         original_classification: Original classification by LLM.
         correct_classification: Correct classification by user.
         notes: User notes.
+        add_to_excluded: If True, add sender to excluded_senders.txt.
+        sender_email: The sender email address (required if add_to_excluded is True).
     """
     feedback_entry = {
         "timestamp": datetime.now().isoformat(),
@@ -88,6 +133,8 @@ def _save_feedback(
         "original_classification": original_classification,
         "correct_classification": correct_classification,
         "notes": notes,
+        "add_to_excluded": add_to_excluded,
+        "sender_email": sender_email,
     }
 
     # Read existing feedback
@@ -107,6 +154,10 @@ def _save_feedback(
         json.dump(feedback_data, f, indent=2, ensure_ascii=False)
 
     print(f"✅ Feedback salvato per: {subject}")
+
+    # Add sender to excluded list if requested
+    if add_to_excluded and sender_email:
+        _add_sender_to_excluded(sender_email)
 
 
 def provide_feedback() -> None:
@@ -158,6 +209,7 @@ def provide_feedback() -> None:
         # Show details
         print(f"\n{'=' * 60}")
         print(f"Messaggio selezionato: {selected.get('subject', 'N/A')}")
+        print(f"Da: {selected.get('from', 'N/A')}")
         print(f"Urgenza originale: {selected.get('urgency', 0)}/5")
         print(f"Categoria originale: {selected.get('classification', 'N/A')}")
         print(f"Analisi: {selected.get('analysis', 'N/A')}")
@@ -176,6 +228,14 @@ def provide_feedback() -> None:
 
             notes = input("Note aggiuntive (opzionale): ") or ""
 
+            # Ask if sender should be added to excluded list
+            add_to_excluded_input = input(
+                "Aggiungere questo mittente alla lista esclusi? (y/n) [n]: "
+            ).lower()
+            add_to_excluded = add_to_excluded_input.startswith("y")
+
+            sender_email = selected.get("from", "")
+
             # Save feedback
             _save_feedback(
                 selected.get("thread_id", ""),
@@ -185,6 +245,8 @@ def provide_feedback() -> None:
                 selected.get("classification", ""),
                 correct_classification,
                 notes,
+                add_to_excluded,
+                sender_email,
             )
 
             print("\n✅ Feedback registrato con successo!")
@@ -408,11 +470,13 @@ def export_feedback_template() -> None:
                 fieldnames=[
                     "thread_id",
                     "subject",
+                    "sender_email",
                     "original_urgency",
                     "correct_urgency",
                     "original_classification",
                     "correct_classification",
                     "notes",
+                    "add_to_excluded",
                 ],
             )
             writer.writeheader()
@@ -422,11 +486,13 @@ def export_feedback_template() -> None:
                     {
                         "thread_id": entry.get("thread_id", ""),
                         "subject": entry.get("subject", ""),
+                        "sender_email": entry.get("from", ""),
                         "original_urgency": entry.get("urgency", ""),
                         "correct_urgency": "",  # Da compilare
                         "original_classification": entry.get("classification", ""),
                         "correct_classification": "",  # Da compilare
                         "notes": "",  # Da compilare
+                        "add_to_excluded": "",  # Da compilare (y/n)
                     }
                 )
 
@@ -438,6 +504,7 @@ def export_feedback_template() -> None:
         print("      - correct_urgency: urgenza corretta (1-5)")
         print("      - correct_classification: categoria corretta (opzionale)")
         print("      - notes: note aggiuntive (opzionale)")
+        print("      - add_to_excluded: y per aggiungere a lista esclusi (opzionale)")
         print("   3. Salva il file")
         print(
             "   4. Importa: poetry run python -m src.feedback --import "
@@ -471,11 +538,13 @@ def import_feedback_from_csv(csv_file: str) -> None:
             for row in reader:
                 thread_id = row.get("thread_id", "").strip()
                 subject = row.get("subject", "").strip()
+                sender_email = row.get("sender_email", "").strip()
                 original_urgency = row.get("original_urgency", "").strip()
                 correct_urgency = row.get("correct_urgency", "").strip()
                 original_classification = row.get("original_classification", "").strip()
                 correct_classification = row.get("correct_classification", "").strip()
                 notes = row.get("notes", "").strip()
+                add_to_excluded_str = row.get("add_to_excluded", "").strip().lower()
 
                 # Skip if no corrections provided
                 if not correct_urgency and not correct_classification:
@@ -496,6 +565,9 @@ def import_feedback_from_csv(csv_file: str) -> None:
                     skipped_count += 1
                     continue
 
+                # Parse add_to_excluded flag
+                add_to_excluded = add_to_excluded_str.startswith("y")
+
                 # Save feedback
                 _save_feedback(
                     thread_id,
@@ -505,6 +577,8 @@ def import_feedback_from_csv(csv_file: str) -> None:
                     original_classification,
                     correct_classification,
                     notes,
+                    add_to_excluded,
+                    sender_email,
                 )
                 imported_count += 1
 
