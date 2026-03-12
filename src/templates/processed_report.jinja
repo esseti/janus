@@ -1,6 +1,6 @@
 📋 *Report Messaggi Processati (Urgenza ≤ 2)*
 
 {% for entry in log_data -%}
-•  *{{ entry.subject[:60] }}* | {{ format_stars(entry.urgency) }} | {{ entry.from }} 
- _{{ entry.analysis[:120] }}{% if entry.analysis|length > 120 %}...{% endif %}_ | {% if entry.thread_id %}🔗 <https://mail.google.com/mail/u/0/#inbox/{{ entry.thread_id }}|Apri in Gmail>{% endif %}
+•  *{{ entry.subject }}* | {{ format_stars(entry.urgency) }} | {{ entry.from }} 
+ _{{ entry.analysis }}_ | {% if entry.thread_id %}🔗 <https://mail.google.com/mail/u/0/#inbox/{{ entry.thread_id }}|Apri in Gmail>{% endif %}
 {% endfor %}
