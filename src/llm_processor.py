@@ -31,6 +31,13 @@ class EmailAnalysis(BaseModel):
         default=None,
         description="Suggested draft reply if needs_reply is True, else None. In the language of the thread, ALWAYS",
     )
+    is_mailing_list: bool = Field(
+        default=False,
+        description="Whether this email is clearly from a mailing list, newsletter, "
+        "or automated bulk sender (e.g., marketing emails, promotional content, "
+        "automated notifications from services). Set to True ONLY if it's clearly "
+        "a mass mailing that should be excluded from future processing.",
+    )
 
 
 class BatchEmailAnalysis(BaseModel):
@@ -93,6 +100,13 @@ class LLMProcessor:
             "\n- If the email is informational, automated, or a newsletter, "
             "set needs_reply=False."
             "\n- Only create a draft if Stefano needs to take personal action."
+            "\n\nIMPORTANT for is_mailing_list:"
+            "\n- Set is_mailing_list=True if the email is clearly a mailing list, "
+            "newsletter, marketing email, or automated bulk sender."
+            "\n- Examples: promotional emails, marketing campaigns, automated "
+            "service notifications, mass mailings, newsletters."
+            "\n- If marked as mailing list, the sender will be automatically "
+            "excluded from future processing."
             "\n\nBe concise and professional."
         )
 
@@ -167,6 +181,13 @@ class LLMProcessor:
             "\n- If the email is informational, automated, or a newsletter, "
             "set needs_reply=False."
             "\n- Only create a draft if Stefano needs to take personal action."
+            "\n\nIMPORTANT for is_mailing_list:"
+            "\n- Set is_mailing_list=True if the email is clearly a mailing list, "
+            "newsletter, marketing email, or automated bulk sender."
+            "\n- Examples: promotional emails, marketing campaigns, automated "
+            "service notifications, mass mailings, newsletters."
+            "\n- If marked as mailing list, the sender will be automatically "
+            "excluded from future processing."
             "\n\nBe concise and professional."
         )
 

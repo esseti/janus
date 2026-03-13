@@ -85,6 +85,45 @@ class GmailClient:
 
         return False
 
+    def add_to_excluded_senders(self, from_header: str) -> bool:
+        """Add sender email to excluded_senders.txt if not already present.
+
+        Extracts email address from From header and adds it to the exclusion list.
+
+        Args:
+            from_header: The From header value (e.g., "Name <email@domain.com>").
+
+        Returns:
+            True if sender was added, False if already present or error.
+        """
+        import re
+
+        # Extract email address from header (e.g., "Name <email@domain.com>" -> "email@domain.com")
+        email_match = re.search(r"<([^>]+)>", from_header)
+        if email_match:
+            email = email_match.group(1).strip().lower()
+        else:
+            # If no angle brackets, assume the whole string is the email
+            email = from_header.strip().lower()
+
+        # Check if already excluded
+        if self._is_excluded_sender(email):
+            return False
+
+        # Add to file
+        excluded_file = Path("excluded_senders.txt")
+        try:
+            with open(excluded_file, "a", encoding="utf-8") as f:
+                f.write(f"{email}\n")
+
+            # Update in-memory list
+            self.excluded_senders.append(email)
+            print(f"  ➕ Aggiunto a excluded_senders.txt: {email}")
+            return True
+        except Exception as e:
+            print(f"  ⚠️ Errore aggiunta a excluded_senders.txt: {e}")
+            return False
+
     def _get_last_run_timestamp(self) -> str | None:
         """Get timestamp of last run from file.
 

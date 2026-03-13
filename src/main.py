@@ -257,7 +257,21 @@ def run_janus() -> None:
             analysis_text = getattr(analysis, "analysis", "N/A")
             needs_reply = getattr(analysis, "needs_reply", False)
             draft_body = getattr(analysis, "draft_body", None)
+            is_mailing_list = getattr(analysis, "is_mailing_list", False)
             print(f"  📊 Urgenza: {urgency}/5 | {classification}")
+
+            # If identified as mailing list, add sender to exclusion list
+            if is_mailing_list:
+                from_addr = details.get("from", "N/A")
+                print(f"  📧 Rilevata mailing list: {from_addr}")
+                if gmail.add_to_excluded_senders(from_addr):
+                    print(f"  ✅ Sender escluso dalle future elaborazioni")
+                # Archive and mark with janus-ml label
+                gmail.mark_as_read(thread_id, "janus-ml")
+                gmail.archive_thread(thread_id)
+                _log_mailing_list_message(thread_id, details["subject"], from_addr)
+                processed_count += 1
+                continue
 
             # Collect notification if urgency > 2
             notified = False
