@@ -4,6 +4,7 @@ import json
 import os
 
 import requests
+from jinja2 import Environment, FileSystemLoader
 
 from .config import Config
 
@@ -26,26 +27,12 @@ def send_mailing_list_report() -> bool:
     if not log_data:
         return True
 
-    message_parts = [
-        "📧 *Report Mailing List (Messaggi Archiviati)*\n",
-    ]
+    # Load and render template
+    template_dir = os.path.join(os.path.dirname(__file__), "templates")
+    env = Environment(loader=FileSystemLoader(template_dir))
+    template = env.get_template("mailing_list_report.jinja")
 
-    for entry in log_data:
-        subject = entry.get("subject", "N/A")
-        from_addr = entry.get("from", "N/A")
-        thread_id = entry.get("thread_id", "")
-
-        # Create Gmail link
-        gmail_link = ""
-        if thread_id:
-            gmail_link = f"https://mail.google.com/mail/u/0/#inbox/{thread_id}"
-
-        # Compact format: MITTENTE | TITOLO | LINK
-        link_text = f"<{gmail_link}|🔗>" if gmail_link else ""
-
-        message_parts.append(f"{subject[:50]} | {from_addr[:40]}  | {link_text}")
-
-    message = "\n - ".join(message_parts)
+    message = template.render(log_data=log_data)
 
     try:
         webhook_url = str(Config.GOOGLE_CHAT_WEBHOOK)

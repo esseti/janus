@@ -26,6 +26,7 @@ class GmailClient:
         self.creds = self._authenticate()
         self.service = build("gmail", "v1", credentials=self.creds)
         self.excluded_senders = self._load_excluded_senders()
+        self.keep_senders = self._load_keep_senders()
 
     def _load_excluded_senders(self) -> list[str]:
         """Load excluded sender patterns from configuration file.
@@ -53,8 +54,39 @@ class GmailClient:
             print(f"⚠️ Errore caricamento excluded_senders.txt: {e}")
             return []
 
+    def _load_keep_senders(self) -> list[str]:
+        """Load keep sender patterns from configuration file.
+
+        These senders will always be processed, even if they match excluded_senders.
+
+        Returns:
+            List of email patterns to always keep (lowercase).
+        """
+        keep_file = Path("keep_senders.txt")
+        if not keep_file.exists():
+            return []
+
+        keep = []
+        try:
+            with open(keep_file, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    # Skip empty lines and comments
+                    if line and not line.startswith("#"):
+                        keep.append(line.lower())
+
+            if keep:
+                print(f"📋 Caricati {len(keep)} pattern di mittenti da mantenere")
+            return keep
+        except Exception as e:
+            print(f"⚠️ Errore caricamento keep_senders.txt: {e}")
+            return []
+
     def _is_excluded_sender(self, from_header: str) -> bool:
         """Check if sender matches any excluded pattern.
+
+        First checks if sender is in keep_senders (priority override).
+        Then checks if sender matches excluded_senders patterns.
 
         Supports glob-style patterns with * and ? wildcards:
         - * matches any sequence of characters
@@ -67,10 +99,21 @@ class GmailClient:
         Returns:
             True if sender should be excluded, False otherwise.
         """
+        from_lower = from_header.lower()
+
+        # Check keep_senders first (priority override)
+        if self.keep_senders:
+            for pattern in self.keep_senders:
+                if "*" in pattern or "?" in pattern:
+                    if fnmatch(from_lower, pattern):
+                        return False  # Keep this sender
+                else:
+                    if pattern in from_lower:
+                        return False  # Keep this sender
+
+        # Check excluded_senders
         if not self.excluded_senders:
             return False
-
-        from_lower = from_header.lower()
 
         for pattern in self.excluded_senders:
             # Check if pattern contains wildcards

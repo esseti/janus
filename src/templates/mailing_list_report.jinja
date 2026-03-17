@@ -1,0 +1,5 @@
+📧 *Report Mailing List (Messaggi Archiviati)*
+
+{% for entry in log_data -%}
+ - {{entry.timestamp}} | *{{ entry.subject }}* | {{ entry.from}}  | {% if entry.thread_id %}<https://mail.google.com/mail/u/0/#inbox/{{ entry.thread_id }}|🔗>{% endif %}
+{% endfor %}

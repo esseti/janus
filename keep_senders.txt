@@ -1,0 +1,20 @@
+# Keep Senders Configuration
+# Add one email address or pattern per line
+# Lines starting with # are comments and will be ignored
+#
+# These senders will ALWAYS be processed, even if they match excluded_senders.txt
+# This list has PRIORITY over excluded_senders.txt
+#
+# Supported patterns:
+# 1. Exact substring match: @important.com (matches any email containing this)
+# 2. Wildcard patterns:
+#    - * matches any sequence of characters
+#    - ? matches any single character
+#
+# Examples:
+# important@newsletter.com      # Keep this specific newsletter
+# *@critical-domain.com         # Keep all emails from this domain
+# vip-*@*.com                   # Keep emails like "vip-alerts@example.com"
+#
+# Add your keep senders below:
+
