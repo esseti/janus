@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 
+from ollama import chat
 import requests
 from jinja2 import Environment, FileSystemLoader
 
@@ -63,7 +64,6 @@ def send_mailing_list_report() -> bool:
 
     except Exception as e:
         print(f"❌ Errore invio report mailing list: {e}")
-        return False
 
     if email_sent or chat_sent:
         # Clear the log file after successful send
