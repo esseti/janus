@@ -145,12 +145,18 @@ def run_janus() -> None:
         msg_id = msg["id"]
         thread_id = msg["threadId"]
 
+        # First, check if this is the Janus report email
+        is_recipient, msg_info = gmail.is_user_recipient(msg_id, Config.USER_EMAIL)
+        subject = msg_info.get("subject", "N/A")
+        
+        if subject.startswith("[Janus]"):
+            print(f"  ⏭️  Saltato messaggio {msg_id[:8]}... (Report Janus mantenuto in inbox)")
+            continue
+
         # Check if sender is valid (not no-reply)
         if not gmail.is_valid_sender(msg_id):
-            # Get message info for logging
-            is_recipient, msg_info = gmail.is_user_recipient(msg_id, Config.USER_EMAIL)
+            # Get message info for logging (already have it, but for safety in case of changes)
             from_addr = msg_info.get("from", "N/A")
-            subject = msg_info.get("subject", "N/A")
 
             print(f"  📧 Mailing list {msg_id[:8]}... ({from_addr})")
 
@@ -164,14 +170,12 @@ def run_janus() -> None:
             continue
 
         # Check if user is in To/CC
-        is_recipient, msg_info = gmail.is_user_recipient(msg_id, Config.USER_EMAIL)
         if is_recipient:
             filtered_messages.append(msg)
         else:
             # Log detailed info for skipped messages
             from_addr = msg_info.get("from", "N/A")
             to_addr = msg_info.get("to", "N/A")
-            subject = msg_info.get("subject", "N/A")
             print(
                 f"  ⏭️  Saltato messaggio {msg_id[:8]}... "
                 f"(utente non in To/CC)\n"

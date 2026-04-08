@@ -517,6 +517,39 @@ class GmailClient:
             print(f"❌ Errore verifica mittente: {error}")
             return True  # In case of error, don't filter out
 
+    def send_email(self, to: str, subject: str, body_text: str) -> bool:
+        """Sends an email using the Gmail API.
+        
+        Args:
+            to: Recipient email address.
+            subject: Email subject.
+            body_text: Email body content (plain text).
+            
+        Returns:
+            True if sent successfully, False otherwise.
+        """
+        from email.message import EmailMessage
+        
+        message = EmailMessage()
+        message.set_content(body_text)
+        message["To"] = to
+        message["From"] = "me"
+        message["Subject"] = subject
+
+        encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+
+        create_message = {
+            "raw": encoded_message
+        }
+        
+        try:
+            self.service.users().messages().send(userId="me", body=create_message).execute()
+            print(f"✅ Email inviata a {to}")
+            return True
+        except HttpError as error:
+            print(f"❌ Errore invio email: {error}")
+            return False
+
     def get_thread_details(self, thread_id):
         """Fetches full thread content and formats it for the LLM."""
         try:

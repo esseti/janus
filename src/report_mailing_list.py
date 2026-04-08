@@ -7,10 +7,11 @@ import requests
 from jinja2 import Environment, FileSystemLoader
 
 from .config import Config
+from .gmail_client import GmailClient
 
 
 def send_mailing_list_report() -> bool:
-    """Send report of mailing list messages to Google Chat.
+    """Send report of mailing list messages to Google Chat and Email.
 
     Returns:
         True if report sent successfully, False otherwise.
@@ -39,6 +40,14 @@ def send_mailing_list_report() -> bool:
         response = requests.post(webhook_url, json={"text": message})
         response.raise_for_status()
         print(f"✅ Report mailing list inviato ({len(log_data)} messaggi)")
+        
+        # Send Email Report
+        try:
+            gmail = GmailClient()
+            subject = "[Janus] Report Mailing List Archiviate"
+            gmail.send_email(Config.USER_EMAIL, subject, message)
+        except Exception as email_err:
+            print(f"❌ Errore invio email report: {email_err}")
 
         # Clear the log file after successful send
         with open(Config.MAILING_LIST_LOG_FILE, "w") as f:
