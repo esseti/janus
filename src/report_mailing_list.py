@@ -43,14 +43,6 @@ def send_mailing_list_report() -> bool:
 
     # Send Email Report
     email_sent = False
-    chat_sent = False
-    try:
-        email_sent = True
-        gmail = GmailClient()
-        subject = "[Janus] Report Mailing List Archiviate"
-        gmail.send_email(Config.USER_EMAIL, subject, message)
-    except Exception as email_err:
-        print(f"❌ Errore invio email report: {email_err}")
 
     try:
         chat_sent = True
@@ -63,6 +55,14 @@ def send_mailing_list_report() -> bool:
 
     except Exception as e:
         print(f"❌ Errore invio report mailing list: {e}")
+        chat_sent = False
+        try:
+            email_sent = True
+            gmail = GmailClient()
+            subject = "[Janus] Report Mailing List Archiviate"
+            gmail.send_email(Config.USER_EMAIL, subject, message)
+        except Exception as email_err:
+            print(f"❌ Errore invio email report: {email_err}")
 
     if email_sent or chat_sent:
         # Clear the log file after successful send
