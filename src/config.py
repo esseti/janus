@@ -17,6 +17,7 @@ class Config:
     OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     GOOGLE_CHAT_WEBHOOK = os.getenv("GOOGLE_CHAT_WEBHOOK")
     USER_EMAIL = os.getenv("USER_EMAIL")
+    USER_NAME = os.getenv("USER_NAME", "")
     TARGET_LABEL = os.getenv("TARGET_LABEL", "janus")
     POLLING_INTERVAL = int(os.getenv("POLLING_INTERVAL", "600"))
     CREDENTIALS_FILE = "credentials.json"

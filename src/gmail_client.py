@@ -25,6 +25,9 @@ class GmailClient:
         """Initialize Gmail client with authentication."""
         self.creds = self._authenticate()
         self.service = build("gmail", "v1", credentials=self.creds)
+        profile = self.service.users().getProfile(userId="me").execute()
+        self.authenticated_email = profile.get("emailAddress", "")
+        print(f"📧 Account Gmail autenticato: {self.authenticated_email}")
         self.excluded_senders = self._load_excluded_senders()
         self.keep_senders = self._load_keep_senders()
 
@@ -519,31 +522,31 @@ class GmailClient:
 
     def send_email(self, to: str, subject: str, body_text: str) -> bool:
         """Sends an email using the Gmail API.
-        
+
         Args:
             to: Recipient email address.
             subject: Email subject.
             body_text: Email body content (plain text).
-            
+
         Returns:
             True if sent successfully, False otherwise.
         """
         from email.message import EmailMessage
-        
+
         message = EmailMessage()
         message.set_content(body_text)
-        message["To"] = to
-        message["From"] = "me"
+        message["To"] = self.authenticated_email
+        message["From"] = self.authenticated_email
         message["Subject"] = subject
 
         encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
 
-        create_message = {
-            "raw": encoded_message
-        }
-        
+        create_message = {"raw": encoded_message}
+
         try:
-            self.service.users().messages().send(userId="me", body=create_message).execute()
+            self.service.users().messages().send(
+                userId="me", body=create_message
+            ).execute()
             print(f"✅ Email inviata a {to}")
             return True
         except HttpError as error:

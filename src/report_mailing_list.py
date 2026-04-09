@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 import os
 
-from ollama import chat
 import requests
 from jinja2 import Environment, FileSystemLoader
 
