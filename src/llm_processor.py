@@ -21,6 +21,14 @@ class EmailAnalysis(BaseModel):
     analysis: str = Field(
         description="Brief justification for the classification and importance. In italian, ALWAYS"
     )
+    summary: str = Field(
+        description="Concise summary of the entire email thread context. In italian, ALWAYS."
+    )
+    latest_message_summary: str = Field(
+        description="Summary focused specifically on the LATEST/NEW message in the thread. "
+        "State who sent it (name and email) and what they said or asked. "
+        "If the thread has only one message, summarize that one. In italian, ALWAYS."
+    )
     needs_reply: bool = Field(
         description="Whether a reply draft is suggested. IMPORTANT: Set to True "
         "ONLY if the email explicitly requires an action or response from Stefano "
@@ -91,6 +99,11 @@ class LLMProcessor:
             "You are an expert executive assistant for Stefano. "
             "Analyze each email thread to determine its classification, "
             "urgency, and if it requires a reply draft. "
+            "\n\nIMPORTANT for summary and latest_message_summary:"
+            "\n- summary: brief overview of the full thread context."
+            "\n- latest_message_summary: focus ONLY on the last message separated by '---'. "
+            "State who sent it (full name and email address) and what they said/asked. "
+            "This is the most important field — be specific."
             "\n\nIMPORTANT for needs_reply and draft_body:"
             "\n- Set needs_reply=True ONLY if the email explicitly requires "
             "an action or response from Stefano PERSONALLY."
@@ -175,6 +188,11 @@ class LLMProcessor:
             "You are an expert executive assistant for Stefano. "
             "Analyze the email thread to determine its classification, "
             "urgency, and if it requires a reply draft. "
+            "\n\nIMPORTANT for summary and latest_message_summary:"
+            "\n- summary: brief overview of the full thread context."
+            "\n- latest_message_summary: focus ONLY on the last message separated by '---'. "
+            "State who sent it (full name and email address) and what they said/asked. "
+            "This is the most important field — be specific."
             "\n\nIMPORTANT for needs_reply and draft_body:"
             "\n- Set needs_reply=True ONLY if the email explicitly requires "
             "an action or response from Stefano PERSONALLY."

@@ -259,6 +259,8 @@ def run_janus() -> None:
             urgency = getattr(analysis, "urgency", 3)
             classification = getattr(analysis, "classification", "N/A")
             analysis_text = getattr(analysis, "analysis", "N/A")
+            summary = getattr(analysis, "summary", "")
+            latest_message_summary = getattr(analysis, "latest_message_summary", "")
             needs_reply = getattr(analysis, "needs_reply", False)
             draft_body = getattr(analysis, "draft_body", None)
             is_mailing_list = getattr(analysis, "is_mailing_list", False)
@@ -289,6 +291,8 @@ def run_janus() -> None:
                         "urgency": urgency,
                         "classification": classification,
                         "analysis": analysis_text,
+                        "summary": summary,
+                        "latest_message_summary": latest_message_summary,
                         "needs_reply": needs_reply,
                         "draft_body": draft_body,
                     }
