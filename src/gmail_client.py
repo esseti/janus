@@ -292,7 +292,8 @@ class GmailClient:
             last_run_dt = None
 
             if last_run:
-                last_run_dt = datetime.fromisoformat(last_run)
+                # Subtract 2 minutes safety margin to avoid missing emails arriving during execution
+                last_run_dt = datetime.fromisoformat(last_run) - timedelta(minutes=2)
                 # If last run was between yesterday and today, search from yesterday
                 yesterday = datetime.now().replace(
                     hour=0, minute=0, second=0, microsecond=0
@@ -683,8 +684,10 @@ class GmailClient:
         """
         try:
             label_id = self._get_or_create_label(target_label)
-            # "removeLabelIds": ["UNREAD"],
-            body = {"addLabelIds": [label_id]}
+            body = {
+                "addLabelIds": [label_id],
+                "removeLabelIds": ["UNREAD"],
+            }
 
             self.service.users().threads().modify(
                 userId="me",
