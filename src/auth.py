@@ -52,12 +52,10 @@ def _run_auth_flow(port: int) -> Credentials:
                 self.send_header("Content-Type", "text/html")
                 self.end_headers()
                 self.wfile.write(b"<h2>Authentication successful! You can close this tab.</h2>")
+                threading.Thread(target=server.shutdown, daemon=True).start()
             else:
-                self.send_response(400)
-                self.send_header("Content-Type", "text/html")
+                self.send_response(204)
                 self.end_headers()
-                self.wfile.write(b"<h2>Missing code parameter.</h2>")
-            threading.Thread(target=server.shutdown, daemon=True).start()
 
         def log_message(self, *args):
             pass
