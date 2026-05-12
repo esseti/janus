@@ -449,9 +449,9 @@
         <div class="code-block">
           <button class="copy-btn" type="button">Copy</button>
           <pre>mkdir -p ~/janus &amp;&amp; cd ~/janus
-curl -fsSLO https://raw.githubusercontent.com/esseti/janus/master/docker-compose.yml
-curl -fsSLO https://raw.githubusercontent.com/esseti/janus/master/.env.example
-curl -fsSLO https://raw.githubusercontent.com/esseti/janus/master/server-setup.sh
+curl -fsSLO https://raw.githubusercontent.com/esseti/janus/main/docker-compose.yml
+curl -fsSLO https://raw.githubusercontent.com/esseti/janus/main/.env.example
+curl -fsSLO https://raw.githubusercontent.com/esseti/janus/main/server-setup.sh
 mv .env.example .env</pre>
         </div>
       </div>
@@ -459,13 +459,14 @@ mv .env.example .env</pre>
       <div class="setup-card">
         <div class="num">Step 02</div>
         <h3>Fill in <code>.env</code> &amp; drop credentials</h3>
-        <p>Edit <code>.env</code> with your Gemini key, Google Chat webhook, and email. Save <code>credentials.json</code> (Desktop OAuth client from Google Cloud) in the same folder.</p>
+        <p>Edit <code>.env</code> with your Gemini key, Google Chat webhook, and email. Download <code>credentials.json</code> (Desktop OAuth client) from Google Cloud Console → APIs &amp; Services → Credentials, then set its path in <code>.env</code>.</p>
         <div class="code-block">
           <button class="copy-btn" type="button">Copy</button>
           <pre><span class="c"># required in .env</span>
 GEMINI_API_KEY=...
 GOOGLE_CHAT_WEBHOOK=...
-USER_EMAIL=you@example.com</pre>
+USER_EMAIL=you@example.com
+CREDENTIALS_FILE=/path/to/credentials.json</pre>
         </div>
       </div>
 

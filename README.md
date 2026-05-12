@@ -34,9 +34,9 @@ You don't need to clone this repo. You just need a folder with the right files i
 
 ```bash
 mkdir -p ~/janus && cd ~/janus
-curl -fsSLO https://raw.githubusercontent.com/esseti/janus/master/docker-compose.yml
-curl -fsSLO https://raw.githubusercontent.com/esseti/janus/master/.env.example
-curl -fsSLO https://raw.githubusercontent.com/esseti/janus/master/server-setup.sh
+curl -fsSLO https://raw.githubusercontent.com/esseti/janus/main/docker-compose.yml
+curl -fsSLO https://raw.githubusercontent.com/esseti/janus/main/.env.example
+curl -fsSLO https://raw.githubusercontent.com/esseti/janus/main/server-setup.sh
 mv .env.example .env
 chmod +x server-setup.sh
 ```
@@ -51,7 +51,15 @@ Edit `.env`. At minimum:
 
 ### 3. Add `credentials.json`
 
-Download OAuth credentials (type **Desktop app**) from Google Cloud Console → APIs & Services → Credentials, and save the file as `credentials.json` in this folder.
+Download OAuth credentials (type **Desktop app**) from Google Cloud Console → APIs & Services → Credentials.
+
+Save the file anywhere on your machine and set its path in `.env`:
+
+```bash
+CREDENTIALS_FILE=/path/to/your/credentials.json
+```
+
+If you leave `CREDENTIALS_FILE` unset, Janus looks for `credentials.json` in the current folder.
 
 ### 4. Generate `token.json` via Docker
 
@@ -92,7 +100,7 @@ Drop these files into the same folder if you want extra control:
 
 ### Updates
 
-Push to `master` → GitHub Actions builds and pushes a new image to GHCR.  
+Push to `main` → GitHub Actions builds and pushes a new image to GHCR.  
 The server's crontab already runs `docker compose pull` every night at 04:00, so it picks up new images automatically.
 
 ### Logs
