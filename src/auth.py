@@ -12,14 +12,55 @@ from __future__ import annotations
 
 import os
 import sys
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import parse_qs, urlparse
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
+from google_auth_oauthlib.flow import Flow
 
 from .config import Config
 
 SCOPES = ["https://www.googleapis.com/auth/gmail.modify"]
+
+
+def _run_auth_flow(port: int) -> Credentials:
+    """Start OAuth flow binding on 0.0.0.0 but using localhost in the redirect URI."""
+    redirect_uri = f"http://localhost:{port}"
+
+    flow = Flow.from_client_secrets_file(
+        str(Config.CREDENTIALS_FILE),
+        scopes=SCOPES,
+        redirect_uri=redirect_uri,
+    )
+
+    auth_url, _ = flow.authorization_url(access_type="offline", prompt="consent")
+    print(f"\nOpen this URL in your browser:\n\n  {auth_url}\n")
+    print(f"Waiting for callback on http://localhost:{port} ...")
+
+    code: list[str] = []
+
+    class _Handler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            params = parse_qs(urlparse(self.path).query)
+            if "code" in params:
+                code.append(params["code"][0])
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(b"<h2>Authentication successful! You can close this tab.</h2>")
+            else:
+                self.send_response(400)
+                self.end_headers()
+                self.wfile.write(b"<h2>Missing code parameter.</h2>")
+
+        def log_message(self, *args):
+            pass
+
+    server = HTTPServer(("0.0.0.0", port), _Handler)
+    server.handle_request()
+
+    flow.fetch_token(code=code[0])
+    return flow.credentials
 
 
 def authenticate() -> None:
@@ -41,20 +82,11 @@ def authenticate() -> None:
         print("Token refreshed.")
     else:
         port = int(os.getenv("AUTH_PORT", "8080"))
-        flow = InstalledAppFlow.from_client_secrets_file(str(Config.CREDENTIALS_FILE), SCOPES)
-        print(f"Starting OAuth server on localhost:{port}.")
-        print(f"Open this URL in your browser (use http://localhost:{port} for the callback):")
-        creds = flow.run_local_server(
-            host="localhost",
-            port=port,
-            open_browser=False,
-            redirect_uri_trailing_slash=False,
-        )
+        creds = _run_auth_flow(port)
         print("Authentication successful.")
 
     Config.TOKEN_FILE.write_text(creds.to_json())
     print(f"Token saved to {Config.TOKEN_FILE}")
-    print("You can now copy token.json to the server.")
 
 
 if __name__ == "__main__":
