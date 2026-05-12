@@ -42,7 +42,7 @@ def authenticate() -> None:
     else:
         port = int(os.getenv("AUTH_PORT", "8080"))
         flow = InstalledAppFlow.from_client_secrets_file(str(Config.CREDENTIALS_FILE), SCOPES)
-        print(f"Starting OAuth server on 0.0.0.0:{port}.")
+        print(f"Starting OAuth server on localhost:{port}.")
         print(f"Open this URL in your browser (use http://localhost:{port} for the callback):")
         creds = flow.run_local_server(
             host="localhost",
