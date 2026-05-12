@@ -1,4 +1,4 @@
-# Janus — Gmail AI Assistant
+# Janus — Gmail AI Triage Assistant
 
 Janus monitors your Gmail, analyses every thread with an LLM (Gemini or Ollama), and sends you a consolidated digest on Google Chat. Low-urgency emails are archived automatically; high-urgency ones surface with a summary and a suggested reply.
 
@@ -51,9 +51,14 @@ Edit `.env`. At minimum:
 
 ### 3. Add `credentials.json`
 
-Download OAuth credentials (type **Desktop app**) from Google Cloud Console → APIs & Services → Credentials.
+Janus uses OAuth 2.0 to access your Gmail. To generate the credentials file:
 
-Save the file anywhere on your machine and set its path in `.env`:
+1. Go to [Google Cloud Console](https://console.cloud.google.com) → **APIs & Services → Enabled APIs** and enable the **Gmail API**.
+2. Go to **APIs & Services → Credentials → Create Credentials → OAuth client ID**.
+3. Set application type to **Desktop app**, give it a name, and click **Create**.
+4. Click **Download JSON** and save the file as `credentials.json`.
+
+Set its path in `.env`:
 
 ```bash
 CREDENTIALS_FILE=/path/to/your/credentials.json

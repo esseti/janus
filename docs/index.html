@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Janus — AI Email Assistant</title>
+  <title>Janus — Gmail AI Triage Assistant</title>
   <style>
     :root {
       --bg:       #0d0f14;
@@ -281,10 +281,10 @@
 
 <!-- HERO -->
 <section class="hero">
-  <div class="badge"><span></span> Powered by Gemini · LangChain · Gmail API</div>
-  <h1>Your inbox,<br><em>intelligently</em> managed</h1>
+  <div class="badge"><span></span> Gmail AI Triage · Powered by Gemini · LangChain</div>
+  <h1>Your Gmail,<br><em>intelligently</em> managed</h1>
   <p class="hero-sub">
-    Janus monitors Gmail, analyses every thread with an LLM, and surfaces only what truly needs your attention — the rest is handled automatically.
+    Janus is a self-hosted Gmail triage assistant. It monitors your Gmail inbox, analyses every thread with an LLM, and surfaces only what truly needs your attention — the rest is handled automatically.
   </p>
   <div class="hero-actions">
     <a class="btn-primary" href="https://github.com/esseti/janus" target="_blank">Get started →</a>
@@ -459,7 +459,7 @@ mv .env.example .env</pre>
       <div class="setup-card">
         <div class="num">Step 02</div>
         <h3>Fill in <code>.env</code> &amp; drop credentials</h3>
-        <p>Edit <code>.env</code> with your Gemini key, Google Chat webhook, and email. Download <code>credentials.json</code> (Desktop OAuth client) from Google Cloud Console → APIs &amp; Services → Credentials, then set its path in <code>.env</code>.</p>
+        <p>Edit <code>.env</code> with your Gemini key, Google Chat webhook, and email. For <code>credentials.json</code>: go to <a href="https://console.cloud.google.com" target="_blank" style="color:var(--accent2)">Google Cloud Console</a> → APIs &amp; Services → Enable the <strong>Gmail API</strong> → Credentials → Create OAuth client ID (type: <strong>Desktop app</strong>) → Download JSON. Set its path in <code>.env</code>.</p>
         <div class="code-block">
           <button class="copy-btn" type="button">Copy</button>
           <pre><span class="c"># required in .env</span>
