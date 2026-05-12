@@ -45,9 +45,8 @@ def authenticate() -> None:
         print(f"Starting OAuth server on 0.0.0.0:{port}.")
         print(f"Open this URL in your browser (use http://localhost:{port} for the callback):")
         creds = flow.run_local_server(
-            host="0.0.0.0",
+            host="localhost",
             port=port,
-            bind_addr="0.0.0.0",
             open_browser=False,
             redirect_uri_trailing_slash=False,
         )
