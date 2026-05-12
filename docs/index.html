@@ -484,14 +484,16 @@ CREDENTIALS_FILE=/path/to/credentials.json</pre>
 
       <div class="setup-card">
         <div class="num">Step 04</div>
-        <h3>Authorise Gmail via Docker</h3>
-        <p>The auth helper runs <em>inside</em> the container and exposes a callback on port 8080. Open the printed URL, sign in, done.</p>
+        <h3>Authorise Gmail — run this on your laptop</h3>
+        <p>The OAuth flow needs a browser, so run this locally (not on the server). Docker is enough — no Python needed. Open the printed URL, sign in, and the container writes <code>token.json</code> for you.</p>
         <div class="code-block">
           <button class="copy-btn" type="button">Copy</button>
-          <pre>docker compose run --rm --service-ports auth
-
-<span class="c"># on a remote server, first open an SSH tunnel from your laptop:</span>
-ssh -L 8080:localhost:8080 user@server</pre>
+          <pre>docker compose run --rm --service-ports auth</pre>
+        </div>
+        <p style="margin-top:.75rem">Then copy the generated file to your server:</p>
+        <div class="code-block">
+          <button class="copy-btn" type="button">Copy</button>
+          <pre>scp ~/janus/token.json user@server:~/janus/</pre>
         </div>
       </div>
 

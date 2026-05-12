@@ -66,26 +66,21 @@ CREDENTIALS_FILE=/path/to/your/credentials.json
 
 If you leave `CREDENTIALS_FILE` unset, Janus looks for `credentials.json` in the current folder.
 
-### 4. Generate `token.json` via Docker
+### 4. Generate `token.json` on your laptop
 
-This runs the OAuth flow inside the container — no local Python install required.
+The OAuth flow requires a browser, so **run this step on your laptop**, not on the server. No Python install needed — just Docker.
 
 ```bash
 docker compose run --rm --service-ports auth
 ```
 
-When the container prints a URL, open it in your browser (on the same machine where you ran the command), authorize, and you'll be redirected to `http://localhost:8080/...`. The container catches that callback and writes `token.json` next to your other files.
+When the container prints a URL, open it in your browser, authorize with your Google account, and you'll be redirected to `http://localhost:8080`. The container catches the callback and writes `token.json` in the current folder.
 
-**Running on a remote server?** Open an SSH tunnel from your laptop first:
+**Deploying to a remote server?** After generating `token.json` locally, copy it to the server:
 
 ```bash
-ssh -L 8080:localhost:8080 user@server
-# inside the SSH session:
-cd ~/janus
-docker compose run --rm --service-ports auth
+scp ~/janus/token.json user@server:~/janus/
 ```
-
-Then open the printed URL on your laptop's browser — the callback to `localhost:8080` is tunnelled through SSH to the container on the server.
 
 ### 5. Run the setup script
 

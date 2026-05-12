@@ -13,6 +13,8 @@ from __future__ import annotations
 import os
 import sys
 import threading
+
+os.environ.setdefault("OAUTHLIB_INSECURE_TRANSPORT", "1")
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlparse
 
