@@ -40,7 +40,6 @@ def _run_auth_flow(port: int) -> Credentials:
     print(f"Waiting for callback on http://localhost:{port} ...")
 
     callback_url: list[str] = []
-    server = HTTPServer(("0.0.0.0", port), BaseHTTPRequestHandler)
 
     class _Handler(BaseHTTPRequestHandler):
         def do_GET(self):
