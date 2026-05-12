@@ -38,13 +38,13 @@ def _run_auth_flow(port: int) -> Credentials:
     print(f"\nOpen this URL in your browser:\n\n  {auth_url}\n")
     print(f"Waiting for callback on http://localhost:{port} ...")
 
-    code: list[str] = []
+    callback_url: list[str] = []
 
     class _Handler(BaseHTTPRequestHandler):
         def do_GET(self):
             params = parse_qs(urlparse(self.path).query)
             if "code" in params:
-                code.append(params["code"][0])
+                callback_url.append(f"http://localhost:{port}{self.path}")
                 self.send_response(200)
                 self.end_headers()
                 self.wfile.write(b"<h2>Authentication successful! You can close this tab.</h2>")
@@ -59,7 +59,7 @@ def _run_auth_flow(port: int) -> Credentials:
     server = HTTPServer(("0.0.0.0", port), _Handler)
     server.handle_request()
 
-    flow.fetch_token(code=code[0])
+    flow.fetch_token(authorization_response=callback_url[0])
     return flow.credentials
 
 
