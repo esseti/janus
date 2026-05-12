@@ -3,7 +3,8 @@ services:
     image: ${JANUS_IMAGE:-ghcr.io/esseti/janus:latest}
     env_file: .env
     volumes:
-      - .:/data
+      - ${CREDENTIALS_FILE:-./credentials.json}:/data/credentials.json:ro
+      - ${TOKEN_FILE:-./token.json}:/data/token.json
     restart: "no"
 
   # One-time OAuth bootstrap to generate token.json.
@@ -13,7 +14,8 @@ services:
     image: ${JANUS_IMAGE:-ghcr.io/esseti/janus:latest}
     env_file: .env
     volumes:
-      - .:/data
+      - ${CREDENTIALS_FILE:-./credentials.json}:/data/credentials.json:ro
+      - ${TOKEN_FILE:-./token.json}:/data/token.json
     ports:
       - "8080:8080"
     command: ["python", "-m", "src.auth"]
