@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import os
 import sys
+import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlparse
 
@@ -39,6 +40,7 @@ def _run_auth_flow(port: int) -> Credentials:
     print(f"Waiting for callback on http://localhost:{port} ...")
 
     callback_url: list[str] = []
+    server = HTTPServer(("0.0.0.0", port), BaseHTTPRequestHandler)
 
     class _Handler(BaseHTTPRequestHandler):
         def do_GET(self):
@@ -46,18 +48,21 @@ def _run_auth_flow(port: int) -> Credentials:
             if "code" in params:
                 callback_url.append(f"http://localhost:{port}{self.path}")
                 self.send_response(200)
+                self.send_header("Content-Type", "text/html")
                 self.end_headers()
                 self.wfile.write(b"<h2>Authentication successful! You can close this tab.</h2>")
             else:
                 self.send_response(400)
+                self.send_header("Content-Type", "text/html")
                 self.end_headers()
                 self.wfile.write(b"<h2>Missing code parameter.</h2>")
+            threading.Thread(target=server.shutdown, daemon=True).start()
 
         def log_message(self, *args):
             pass
 
     server = HTTPServer(("0.0.0.0", port), _Handler)
-    server.handle_request()
+    server.serve_forever()
 
     flow.fetch_token(authorization_response=callback_url[0])
     return flow.credentials
