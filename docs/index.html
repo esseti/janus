@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Janus — AI Email Assistant</title>
+  <style>
+    :root {
+      --bg:       #0d0f14;
+      --surface:  #151820;
+      --border:   #1e2230;
+      --accent:   #6366f1;
+      --accent2:  #818cf8;
+      --text:     #e2e8f0;
+      --muted:    #64748b;
+      --green:    #34d399;
+      --amber:    #fbbf24;
+      --red:      #f87171;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 2rem;
+      background: rgba(13,15,20,.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo { display: flex; align-items: center; gap: .6rem; font-weight: 700; font-size: 1.1rem; letter-spacing: -.01em; }
+    .nav-logo svg { width: 28px; height: 28px; }
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-links a { color: var(--muted); text-decoration: none; font-size: .9rem; transition: color .2s; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-cta {
+      background: var(--accent); color: #fff; padding: .45rem 1.1rem;
+      border-radius: 6px; text-decoration: none; font-size: .88rem; font-weight: 600;
+      transition: background .2s;
+    }
+    .nav-cta:hover { background: var(--accent2); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center;
+      padding: 8rem 1.5rem 5rem;
+      position: relative;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(99,102,241,.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .badge {
+      display: inline-flex; align-items: center; gap: .4rem;
+      background: rgba(99,102,241,.12); border: 1px solid rgba(99,102,241,.3);
+      color: var(--accent2); font-size: .78rem; font-weight: 600; letter-spacing: .06em;
+      text-transform: uppercase; padding: .3rem .85rem; border-radius: 999px;
+      margin-bottom: 1.5rem;
+    }
+    .badge span { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); display: inline-block; }
+    h1 {
+      font-size: clamp(2.6rem, 6vw, 4.2rem);
+      font-weight: 800; letter-spacing: -.03em; line-height: 1.08;
+      max-width: 14ch;
+    }
+    h1 em { font-style: normal; color: var(--accent2); }
+    .hero-sub {
+      margin-top: 1.5rem; color: var(--muted); font-size: 1.15rem;
+      max-width: 52ch; line-height: 1.7;
+    }
+    .hero-actions { display: flex; gap: 1rem; margin-top: 2.5rem; flex-wrap: wrap; justify-content: center; }
+    .btn-primary {
+      background: var(--accent); color: #fff; padding: .75rem 1.6rem;
+      border-radius: 8px; text-decoration: none; font-weight: 600; font-size: .95rem;
+      transition: background .2s, transform .15s;
+    }
+    .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+    .btn-ghost {
+      background: transparent; color: var(--text); padding: .75rem 1.6rem;
+      border-radius: 8px; text-decoration: none; font-weight: 500; font-size: .95rem;
+      border: 1px solid var(--border); transition: border-color .2s, transform .15s;
+    }
+    .btn-ghost:hover { border-color: var(--accent); transform: translateY(-1px); }
+
+    /* ── PIPELINE DIAGRAM ── */
+    .pipeline {
+      display: flex; align-items: center; justify-content: center;
+      flex-wrap: wrap; gap: .5rem;
+      margin-top: 4rem;
+    }
+    .pipe-step {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: .65rem 1.1rem;
+      font-size: .82rem; font-weight: 500; color: var(--muted);
+      display: flex; align-items: center; gap: .5rem;
+      white-space: nowrap;
+    }
+    .pipe-step .icon { font-size: 1rem; }
+    .pipe-arrow { color: var(--border); font-size: 1.2rem; }
+
+    /* ── SECTIONS ── */
+    section { padding: 6rem 1.5rem; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .section-label {
+      font-size: .78rem; font-weight: 700; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: .75rem;
+    }
+    .section-title {
+      font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+      font-weight: 800; letter-spacing: -.02em; line-height: 1.15;
+    }
+    .section-sub { color: var(--muted); margin-top: .9rem; max-width: 55ch; font-size: 1.05rem; }
+
+    /* ── FEATURES GRID ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.25rem; margin-top: 3.5rem;
+    }
+    .feature-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 1.75rem;
+      transition: border-color .2s, transform .2s;
+    }
+    .feature-card:hover { border-color: rgba(99,102,241,.4); transform: translateY(-2px); }
+    .feature-icon {
+      width: 44px; height: 44px; border-radius: 10px;
+      background: rgba(99,102,241,.12); display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; margin-bottom: 1rem;
+    }
+    .feature-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: .45rem; }
+    .feature-card p { color: var(--muted); font-size: .9rem; line-height: 1.65; }
+
+    /* ── HOW IT WORKS ── */
+    #how { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .steps { margin-top: 3.5rem; display: flex; flex-direction: column; gap: 0; }
+    .step {
+      display: grid; grid-template-columns: 56px 1fr;
+      gap: 1.5rem; align-items: flex-start;
+      padding: 1.75rem 0;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+    .step:last-child { border-bottom: none; }
+    .step-num {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: rgba(99,102,241,.12); border: 1px solid rgba(99,102,241,.3);
+      color: var(--accent2); font-weight: 800; font-size: .95rem;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: .15rem;
+    }
+    .step h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: .4rem; }
+    .step p { color: var(--muted); font-size: .9rem; line-height: 1.65; }
+
+    /* ── URGENCY DEMO ── */
+    .urgency-demo {
+      margin-top: 3.5rem;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; overflow: hidden;
+    }
+    .demo-header {
+      padding: .75rem 1.25rem;
+      background: var(--bg); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: .6rem;
+    }
+    .demo-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .demo-title { font-size: .82rem; color: var(--muted); margin-left: .5rem; }
+    .email-row {
+      display: grid; grid-template-columns: 1fr auto auto;
+      align-items: center; gap: 1rem;
+      padding: .85rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      font-size: .88rem;
+    }
+    .email-row:last-child { border-bottom: none; }
+    .email-subject { font-weight: 500; }
+    .email-from { color: var(--muted); font-size: .8rem; margin-top: .15rem; }
+    .tag {
+      font-size: .72rem; font-weight: 700; padding: .2rem .55rem;
+      border-radius: 4px; white-space: nowrap; letter-spacing: .02em;
+    }
+    .tag-critical { background: rgba(248,113,113,.15); color: var(--red); }
+    .tag-important { background: rgba(251,191,36,.12); color: var(--amber); }
+    .tag-low { background: rgba(52,211,153,.1); color: var(--green); }
+    .urgency-stars { font-size: .78rem; color: var(--muted); }
+
+    /* ── SETUP ── */
+    .setup-grid {
+      display: flex; flex-direction: column;
+      gap: 1.25rem; margin-top: 3.5rem;
+    }
+    .setup-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 1.6rem;
+    }
+    .setup-card .num {
+      font-size: .72rem; font-weight: 800; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: .6rem;
+    }
+    .setup-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: .5rem; }
+    .setup-card p { color: var(--muted); font-size: .88rem; line-height: 1.6; }
+    code {
+      font-family: "SF Mono", "Fira Code", monospace;
+      background: rgba(255,255,255,.06); border: 1px solid var(--border);
+      border-radius: 4px; padding: .1rem .35rem; font-size: .82em;
+    }
+    .code-block {
+      position: relative; margin-top: .75rem;
+    }
+    pre {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1.1rem 1.3rem;
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: .82rem; line-height: 1.7; overflow-x: auto;
+      color: #a5b4fc; margin: 0;
+    }
+    .copy-btn {
+      position: absolute; top: .55rem; right: .55rem;
+      background: var(--surface); color: var(--muted);
+      border: 1px solid var(--border); border-radius: 6px;
+      padding: .3rem .6rem; font-size: .72rem; font-weight: 600;
+      cursor: pointer; transition: color .15s, border-color .15s, background .15s;
+      font-family: inherit;
+    }
+    .copy-btn:hover { color: var(--text); border-color: var(--accent); }
+    .copy-btn.copied { color: var(--green); border-color: var(--green); }
+    pre .c { color: var(--muted); }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2.5rem 1.5rem;
+      text-align: center; color: var(--muted); font-size: .85rem;
+    }
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--text); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+      .pipeline { gap: .35rem; }
+      .pipe-step { font-size: .74rem; padding: .5rem .8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="14" cy="14" r="13" fill="rgba(99,102,241,.15)" stroke="#6366f1" stroke-width="1.5"/>
+      <path d="M9 8h4l2 12h-4L9 8z" fill="#818cf8"/>
+      <path d="M15 8h4l-2 12h-4l2-12z" fill="#6366f1" opacity=".7"/>
+    </svg>
+    Janus
+  </div>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#how">How it works</a>
+    <a href="#setup">Setup</a>
+  </div>
+  <a class="nav-cta" href="https://github.com/esseti/janus" target="_blank">View on GitHub</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="badge"><span></span> Powered by Gemini · LangChain · Gmail API</div>
+  <h1>Your inbox,<br><em>intelligently</em> managed</h1>
+  <p class="hero-sub">
+    Janus monitors Gmail, analyses every thread with an LLM, and surfaces only what truly needs your attention — the rest is handled automatically.
+  </p>
+  <div class="hero-actions">
+    <a class="btn-primary" href="https://github.com/esseti/janus" target="_blank">Get started →</a>
+    <a class="btn-ghost" href="#how">See how it works</a>
+  </div>
+
+  <div class="pipeline">
+    <div class="pipe-step"><span class="icon">📥</span> Gmail</div>
+    <span class="pipe-arrow">→</span>
+    <div class="pipe-step"><span class="icon">🔍</span> Filter</div>
+    <span class="pipe-arrow">→</span>
+    <div class="pipe-step"><span class="icon">🤖</span> LLM Analysis</div>
+    <span class="pipe-arrow">→</span>
+    <div class="pipe-step"><span class="icon">📊</span> Urgency score</div>
+    <span class="pipe-arrow">→</span>
+    <div class="pipe-step"><span class="icon">💬</span> Google Chat</div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="container">
+    <p class="section-label">Features</p>
+    <h2 class="section-title">Everything your inbox<br>should do on its own</h2>
+    <p class="section-sub">Janus runs silently in the background, doing the triage work you don't want to do manually.</p>
+
+    <div class="features-grid">
+
+      <div class="feature-card">
+        <div class="feature-icon">🧠</div>
+        <h3>LLM-powered triage</h3>
+        <p>Every thread is analysed by Gemini (or a local Ollama model). You get a classification, an urgency score from 1 to 5, a summary, and a suggested reply — all in one pass.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>Urgency-based routing</h3>
+        <p>Emails scoring 3+ land in your Google Chat digest. Everything below is quietly archived and labelled — still searchable, never in your face.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🚫</div>
+        <h3>Mailing list filter</h3>
+        <p>Janus detects newsletters, bots, and no-reply senders automatically. It learns your patterns over time, adding them to an exclusion list so they're never processed again.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📋</div>
+        <h3>Consolidated digest</h3>
+        <p>Instead of a ping per email, Janus sends a single structured report at configurable times. You see everything at a glance — urgency stars, classification, who it's from, what it's about.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">✏️</div>
+        <h3>Draft reply suggestions</h3>
+        <p>When the LLM detects an email that needs a response, it drafts a reply body and includes it in the notification. You can copy it or ignore it.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <h3>Runs on your own infra</h3>
+        <p>Janus is a Docker container that you deploy on your own server. Your emails never leave your Google account — only metadata and content summaries hit the LLM API.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="container">
+    <p class="section-label">How it works</p>
+    <h2 class="section-title">Five steps, fully automated</h2>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div>
+          <h3>Poll Gmail for new messages</h3>
+          <p>Every 5 minutes on weekdays (every 30 on weekends), Janus fetches unread messages under the <code>janus</code> label since the last run. Only messages where you are a direct recipient (To / CC) move forward.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div>
+          <h3>Filter noise</h3>
+          <p>No-reply addresses, newsletters, and known mailing lists are stripped out before hitting the LLM. Detected mailing lists get a <code>janus-ml</code> label and are archived automatically.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div>
+          <h3>Batch LLM analysis</h3>
+          <p>Threads are grouped and sent to the LLM in batches of 10. The model returns classification, urgency (1–5), a summary, whether a reply is needed, and a suggested reply body.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div>
+          <h3>Send a consolidated report</h3>
+          <p>All threads scoring urgency ≥ 3 are bundled into a single Google Chat message — not one ping per email. Low-urgency threads are archived silently.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div>
+          <h3>Save state and repeat</h3>
+          <p>Processed thread IDs and timestamps are persisted locally so the next run only fetches what's truly new. A digest report is also sent at 8:30, 11:30, 15:30, and 17:30 on weekdays.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live urgency preview -->
+    <div class="urgency-demo" style="margin-top:3.5rem">
+      <div class="demo-header">
+        <div class="demo-dot" style="background:#f87171"></div>
+        <div class="demo-dot" style="background:#fbbf24"></div>
+        <div class="demo-dot" style="background:#34d399"></div>
+        <span class="demo-title">Janus digest — Google Chat</span>
+      </div>
+      <div class="email-row">
+        <div>
+          <div class="email-subject">Urgent: contract review needed by tomorrow</div>
+          <div class="email-from">mario.rossi@client.com → you</div>
+        </div>
+        <span class="urgency-stars">★★★★★</span>
+        <span class="tag tag-critical">Critical</span>
+      </div>
+      <div class="email-row">
+        <div>
+          <div class="email-subject">Invoice #2047 — payment due in 7 days</div>
+          <div class="email-from">accounting@supplier.com → you</div>
+        </div>
+        <span class="urgency-stars">★★★☆☆</span>
+        <span class="tag tag-important">To-do</span>
+      </div>
+      <div class="email-row">
+        <div>
+          <div class="email-subject">Weekly team standup notes</div>
+          <div class="email-from">team@company.com → all</div>
+        </div>
+        <span class="urgency-stars">★☆☆☆☆</span>
+        <span class="tag tag-low">Archived</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- SETUP -->
+<section id="setup">
+  <div class="container">
+    <p class="section-label">Setup</p>
+    <h2 class="section-title">Up and running<br>in four steps</h2>
+    <p class="section-sub">No clone, no build. You just need a folder with the right files in it, and Docker.</p>
+
+    <div class="setup-grid">
+      <div class="setup-card">
+        <div class="num">Step 01</div>
+        <h3>Create a folder, grab the bootstrap files</h3>
+        <p>Three small files via <code>curl</code>. No git clone, no Python install.</p>
+        <div class="code-block">
+          <button class="copy-btn" type="button">Copy</button>
+          <pre>mkdir -p ~/janus &amp;&amp; cd ~/janus
+curl -fsSLO https://raw.githubusercontent.com/esseti/janus/master/docker-compose.yml
+curl -fsSLO https://raw.githubusercontent.com/esseti/janus/master/.env.example
+curl -fsSLO https://raw.githubusercontent.com/esseti/janus/master/server-setup.sh
+mv .env.example .env</pre>
+        </div>
+      </div>
+
+      <div class="setup-card">
+        <div class="num">Step 02</div>
+        <h3>Fill in <code>.env</code> &amp; drop credentials</h3>
+        <p>Edit <code>.env</code> with your Gemini key, Google Chat webhook, and email. Save <code>credentials.json</code> (Desktop OAuth client from Google Cloud) in the same folder.</p>
+        <div class="code-block">
+          <button class="copy-btn" type="button">Copy</button>
+          <pre><span class="c"># required in .env</span>
+GEMINI_API_KEY=...
+GOOGLE_CHAT_WEBHOOK=...
+USER_EMAIL=you@example.com</pre>
+        </div>
+      </div>
+
+      <div class="setup-card">
+        <div class="num">Step 03</div>
+        <h3>Authorise Gmail via Docker</h3>
+        <p>The auth helper runs <em>inside</em> the container and exposes a callback on port 8080. Open the printed URL, sign in, done.</p>
+        <div class="code-block">
+          <button class="copy-btn" type="button">Copy</button>
+          <pre>docker compose run --rm --service-ports auth
+
+<span class="c"># on a remote server, first open an SSH tunnel from your laptop:</span>
+ssh -L 8080:localhost:8080 user@server</pre>
+        </div>
+      </div>
+
+      <div class="setup-card">
+        <div class="num">Step 04</div>
+        <h3>Run the setup script</h3>
+        <p>It pulls the image, initialises the state files, and installs the crontab. After this, Janus runs on its own.</p>
+        <div class="code-block">
+          <button class="copy-btn" type="button">Copy</button>
+          <pre>chmod +x server-setup.sh
+./server-setup.sh</pre>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>
+    Built with ❤️ by <a href="https://github.com/OWNER" target="_blank">Stefano Tranquillini</a> ·
+    <a href="https://github.com/esseti/janus" target="_blank">GitHub</a> ·
+    MIT License
+  </p>
+</footer>
+
+<script>
+  document.querySelectorAll('.copy-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const pre = btn.parentElement.querySelector('pre');
+      if (!pre) return;
+      try {
+        await navigator.clipboard.writeText(pre.innerText);
+        const original = btn.textContent;
+        btn.textContent = 'Copied';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = original;
+          btn.classList.remove('copied');
+        }, 1500);
+      } catch (e) {
+        btn.textContent = 'Error';
+      }
+    });
+  });
+</script>
+
+</body>
+</html>

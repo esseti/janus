@@ -1,66 +1,63 @@
 #!/bin/bash
 
-# File di configurazione locale
+# Local deploy config file
 CONFIG_FILE=".deploy_config"
 
-# Carica la configurazione se esiste, altrimenti la chiede e la salva
+# Load saved config or prompt for it
 if [ -f "$CONFIG_FILE" ]; then
     source "$CONFIG_FILE"
-    echo "Caricata configurazione da $CONFIG_FILE"
+    echo "Loaded config from $CONFIG_FILE"
 else
-    echo "⚙️  Prima configurazione del deploy remoto..."
-    read -p "Indirizzo del server SSH (es. pi@192.168.1.50): " REMOTE_HOST
-    read -p "Cartella di destinazione sul server (es. /home/pi/janus): " REMOTE_DIR
-    read -p "URL del repository Git (es. https://github.com/tuo-utente/janus.git): " GIT_REPO
-    read -p "Branch Git da usare (es. main): " GIT_BRANCH
-    
+    echo "⚙️  First-time remote deploy setup..."
+    read -p "SSH server address (e.g. pi@192.168.1.50): " REMOTE_HOST
+    read -p "Destination folder on server (e.g. /home/pi/janus): " REMOTE_DIR
+    read -p "Git repository URL (e.g. https://github.com/esseti/janus.git): " GIT_REPO
+    read -p "Git branch to use (e.g. main): " GIT_BRANCH
+
     echo "REMOTE_HOST=$REMOTE_HOST" > "$CONFIG_FILE"
     echo "REMOTE_DIR=$REMOTE_DIR" >> "$CONFIG_FILE"
     echo "GIT_REPO=$GIT_REPO" >> "$CONFIG_FILE"
     echo "GIT_BRANCH=$GIT_BRANCH" >> "$CONFIG_FILE"
-    
-    echo "✅ Configurazione salvata in $CONFIG_FILE"
+
+    echo "✅ Config saved to $CONFIG_FILE"
 fi
 
-# Usa il branch da config, o default a "main" se non specificato
 GIT_BRANCH=${GIT_BRANCH:-master}
 
-echo "🚀 Inizio deployment remoto verso $REMOTE_HOST:$REMOTE_DIR"
+echo "🚀 Starting remote deployment to $REMOTE_HOST:$REMOTE_DIR"
 
-# 1. Clona o aggiorna il repository Git sul server remoto
-echo "📦 Clonazione/Aggiornamento del repository sul server remoto..."
+# 1. Clone or update the repo on the remote server
+echo "📦 Cloning/updating repository on remote server..."
 ssh "$REMOTE_HOST" << EOF
     if [ ! -d "$REMOTE_DIR" ]; then
-        echo "La directory non esiste. Clonazione da git..."
+        echo "Directory does not exist. Cloning from git..."
         git clone "$GIT_REPO" "$REMOTE_DIR"
     else
-        echo "La directory esiste. Aggiornamento con git pull..."
+        echo "Directory exists. Updating with git pull..."
         cd "$REMOTE_DIR"
-        # Scarta eventuali modifiche locali non committate per evitare conflitti
         git reset --hard
         git pull origin $GIT_BRANCH
     fi
 EOF
 
-# Verifica se il comando SSH precedente è andato a buon fine
 if [ $? -ne 0 ]; then
-    echo "❌ Errore durante l'interazione con Git sul server."
+    echo "❌ Error interacting with git on the server."
     exit 1
 fi
 
-# 2. Copia i file sensibili (che non sono su Git) dal tuo computer locale al server
-echo "🔑 Copia dei file sensibili e di stato dal Mac al Server..."
+# 2. Copy secret files (not in git) from local to server
+echo "🔑 Copying secret and state files to server..."
 for file in .env credentials.json token.json; do
     if [ -f "$file" ]; then
-        echo "   -> Copio $file"
+        echo "   -> Copying $file"
         scp "$file" "$REMOTE_HOST:$REMOTE_DIR/"
     else
-        echo "   ⚠️  Attenzione: il file $file non esiste localmente!"
+        echo "   ⚠️  Warning: $file not found locally!"
     fi
 done
 
-# 3. Esegui lo script di deploy direttamente sul server
-echo "⚙️  Avvio della configurazione di uv e Cron sul server..."
+# 3. Run the deploy script on the server
+echo "⚙️  Running server-side setup (uv + cron)..."
 ssh "$REMOTE_HOST" << EOF
     cd "$REMOTE_DIR"
     chmod +x deploy_on_server.sh setup_cron.sh
@@ -68,4 +65,4 @@ ssh "$REMOTE_HOST" << EOF
 EOF
 
 echo ""
-echo "🎉 Deploy remoto completato con successo!"
+echo "🎉 Remote deployment complete!"

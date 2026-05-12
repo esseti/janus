@@ -37,7 +37,7 @@ class GmailClient:
         Returns:
             List of email patterns to exclude (lowercase).
         """
-        excluded_file = Path("excluded_senders.txt")
+        excluded_file = Config.EXCLUDED_SENDERS_FILE
         if not excluded_file.exists():
             return []
 
@@ -65,7 +65,7 @@ class GmailClient:
         Returns:
             List of email patterns to always keep (lowercase).
         """
-        keep_file = Path("keep_senders.txt")
+        keep_file = Config.KEEP_SENDERS_FILE
         if not keep_file.exists():
             return []
 
@@ -157,7 +157,7 @@ class GmailClient:
             return False
 
         # Add to file
-        excluded_file = Path("excluded_senders.txt")
+        excluded_file = Config.EXCLUDED_SENDERS_FILE
         try:
             with open(excluded_file, "a", encoding="utf-8") as f:
                 f.write(f"{email}\n")
@@ -269,14 +269,14 @@ class GmailClient:
 
             if messages_fixed > 0:
                 print(
-                    f"✅ Sincronizzazione completata: "
-                    f"{messages_fixed} messaggi corretti"
+                    f"✅ Sync complete: "
+                    f"{messages_fixed} messages fixed"
                 )
             else:
-                print("✅ Tutti i messaggi hanno già il label corretto")
+                print("✅ All messages already have the correct label")
 
         except HttpError as error:
-            print(f"❌ Errore durante sincronizzazione label: {error}")
+            print(f"❌ Error syncing labels: {error}")
 
     def get_unread_messages_since_last_run(self, target_label: str) -> list[dict]:
         """Get unread messages since last run or last 2 days.
@@ -378,13 +378,13 @@ class GmailClient:
                         discarded_count += 1
 
                 print(
-                    f"📨 {len(filtered_messages)} messaggi più recenti "
-                    f"dell'ultima esecuzione"
+                    f"📨 {len(filtered_messages)} messages newer "
+                    f"than last run"
                 )
                 if discarded_count > 0:
                     print(
-                        f"⏭️  {discarded_count} messaggi scartati "
-                        f"(precedenti all'ultima esecuzione)"
+                        f"⏭️  {discarded_count} messages skipped "
+                        f"(older than last run)"
                     )
                 return filtered_messages
 

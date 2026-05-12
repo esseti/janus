@@ -1,43 +1,143 @@
-# Janus - Gmail LLM Assistant
+# Janus — Gmail AI Assistant
 
-Janus è un assistente intelligente che monitora le tue email Gmail, le analizza con Gemini (via LangChain) e ti aiuta a gestirle.
+Janus monitors your Gmail, analyses every thread with an LLM (Gemini or Ollama), and sends you a consolidated digest on Google Chat. Low-urgency emails are archived automatically; high-urgency ones surface with a summary and a suggested reply.
 
-## Funzionalità
-- Monitoraggio della label `janus`.
-- Estrazione completa dei thread.
-- Analisi strutturata (classificazione, urgenza, riassunto).
-- Creazione automatica di bozze di risposta (solo se necessario).
-- Notifiche in tempo reale su Google Chat.
+It's vibecoder.
 
-## Prerequisiti
-1. Python 3.10+ e Poetry.
-2. File `credentials.json` nella root (da Google Cloud Console).
-3. Google Chat Webhook URL.
-4. Gemini API Key.
+## How it works
 
-## Installazione
+1. Polls Gmail for unread messages under a specific label (default: `janus`).
+2. Filters out mailing lists and emails where you are not a direct recipient.
+3. Sends threads in batches to the LLM for classification, urgency scoring (1–5), and summarisation.
+4. Notifies you on Google Chat for urgency ≥ 3, archives the rest.
+5. Runs on a schedule via cron + Docker.
+
+---
+
+## Prerequisites
+
+| What                                                     | Where to get it                                              |
+| -------------------------------------------------------- | ------------------------------------------------------------ |
+| Google Cloud project with **Gmail API** enabled          | [console.cloud.google.com](https://console.cloud.google.com) |
+| OAuth 2.0 credentials (Desktop app) → `credentials.json` | Cloud Console > APIs & Services > Credentials                |
+| **Gemini API key**                                       | [aistudio.google.com](https://aistudio.google.com)           |
+| **Google Chat incoming webhook**                         | Chat space > Apps & integrations > Webhooks                  |
+| Docker + Docker Compose (on the server)                  | [docs.docker.com](https://docs.docker.com/engine/install/)   |
+
+---
+
+## Setup
+
+You don't need to clone this repo. You just need a folder with the right files in it.
+
+### 1. Create a working folder and download the bootstrap files
+
+```bash
+mkdir -p ~/janus && cd ~/janus
+curl -fsSLO https://raw.githubusercontent.com/esseti/janus/master/docker-compose.yml
+curl -fsSLO https://raw.githubusercontent.com/esseti/janus/master/.env.example
+curl -fsSLO https://raw.githubusercontent.com/esseti/janus/master/server-setup.sh
+mv .env.example .env
+chmod +x server-setup.sh
+```
+
+### 2. Fill in `.env`
+
+Edit `.env`. At minimum:
+
+- `GEMINI_API_KEY`
+- `GOOGLE_CHAT_WEBHOOK`
+- `USER_EMAIL`
+
+### 3. Add `credentials.json`
+
+Download OAuth credentials (type **Desktop app**) from Google Cloud Console → APIs & Services → Credentials, and save the file as `credentials.json` in this folder.
+
+### 4. Generate `token.json` via Docker
+
+This runs the OAuth flow inside the container — no local Python install required.
+
+```bash
+docker compose run --rm --service-ports auth
+```
+
+When the container prints a URL, open it in your browser (on the same machine where you ran the command), authorize, and you'll be redirected to `http://localhost:8080/...`. The container catches that callback and writes `token.json` next to your other files.
+
+**Running on a remote server?** Open an SSH tunnel from your laptop first:
+
+```bash
+ssh -L 8080:localhost:8080 user@server
+# inside the SSH session:
+cd ~/janus
+docker compose run --rm --service-ports auth
+```
+
+Then open the printed URL on your laptop's browser — the callback to `localhost:8080` is tunnelled through SSH to the container on the server.
+
+### 5. Run the setup script
+
+```bash
+./server-setup.sh
+```
+
+It pulls the image, initialises the state files, and installs the crontab.
+
+### 6. (Optional) Configure sender filters
+
+Drop these files into the same folder if you want extra control:
+
+- **`excluded_senders.txt`** — patterns of senders to skip (newsletters, bots). One pattern per line, supports `*` globs.
+- **`keep_senders.txt`** — senders that should never be skipped, even if they match an exclusion pattern.
+- **`evaluation_rules.txt`** — extra rules passed to the LLM to guide classification.
+
+### Updates
+
+Push to `master` → GitHub Actions builds and pushes a new image to GHCR.  
+The server's crontab already runs `docker compose pull` every night at 04:00, so it picks up new images automatically.
+
+### Logs
+
+```bash
+ssh user@server 'tail -f /home/user/janus/janus_cron.log'
+```
+
+---
+
+## Develop locally (without Docker)
+
+Only needed if you want to hack on the code.
+
 ```bash
 uv sync
+uv run python -m src.main          # process emails
+uv run python -m src.report        # send digest report
+uv run python -m src.preview       # preview notifications without sending
 ```
 
-## Configurazione
-Crea o modifica il file `.env` con i tuoi dati:
-```env
-GEMINI_API_KEY=tua_chiave
-GOOGLE_CHAT_WEBHOOK=tuo_webhook
-TARGET_LABEL=janus
-PROCESSED_LABEL=janus-processed
-POLLING_INTERVAL=600
+---
+
+## Making the Docker image public
+
+After the first GitHub Actions run, go to:  
+**GitHub → your profile → Packages → janus → Package settings → Change visibility → Public**
+
+This lets others pull the image without authentication.
+
+---
+
+## Project layout
+
+```
+src/
+├── main.py              # main processing loop
+├── auth.py              # one-time OAuth helper
+├── config.py            # all configuration (reads from .env + JANUS_DATA_DIR)
+├── gmail_client.py      # Gmail API wrapper
+├── llm_processor.py     # LangChain + Gemini/Ollama
+├── notifier.py          # Google Chat notifications
+├── report.py            # digest report
+├── report_mailing_list.py
+└── templates/           # Jinja2 templates for Chat messages
 ```
 
-## Avvio
-```bash
-uv run python -m src.main
-```
-
-## Preview Template
-Per vedere come appaiono i messaggi in chat senza inviarli:
-```bash
-uv run python -m src.preview
-```
-**Nota:** Al primo avvio si aprirà il browser per l'autenticazione OAuth2. Il token verrà salvato in `token.json`.
+Runtime data (secrets, state files, logs) lives in `JANUS_DATA_DIR` (default: `.`, mounted as `/data` in Docker).

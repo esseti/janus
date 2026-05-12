@@ -1,115 +1,113 @@
-# Configurazione Crontab per Janus
+# Crontab Configuration for Janus
 
-## Esecuzione automatica ogni 5 minuti
+## Automatic execution every 5 minutes
 
-### Metodo 1: Script automatico (consigliato)
+### Method 1: Setup script (recommended)
 
 ```bash
 ./setup_cron.sh
 ```
 
-Lo script ti guiderà nella configurazione e aggiungerà automaticamente l'entry a crontab.
+The script will configure and install the crontab entries automatically.
 
-### Metodo 2: Configurazione manuale
+### Method 2: Manual configuration
 
-1. Apri crontab:
+1. Open crontab:
 
 ```bash
 crontab -e
 ```
 
-2. Aggiungi queste righe:
+2. Add these lines:
 
 ```bash
-# Janus - Elaborazione email ogni 5 minuti
+# Janus - process emails every 5 minutes
 */5 * * * * cd /Users/stefano/sw/chino/janus && uv run python -m src.main >> /Users/stefano/sw/chino/janus/janus_cron.log 2>&1
 
-# Janus - Report messaggi processati ogni ora
+# Janus - digest report every hour
 0 * * * * cd /Users/stefano/sw/chino/janus && uv run python -m src.report >> /Users/stefano/sw/chino/janus/janus_cron.log 2>&1
 ```
 
-3. Salva e chiudi (`:wq` in vim)
+3. Save and close (`:wq` in vim)
 
-### Verifica configurazione
+### Verify configuration
 
 ```bash
-# Vedi crontab attuale
+# Show current crontab
 crontab -l
 
-# Monitora i log in tempo reale
+# Follow logs in real time
 tail -f /Users/stefano/sw/chino/janus/janus_cron.log
 ```
 
-### Formato crontab
+### Crontab format
 
 ```
-*/5 * * * *  = Ogni 5 minuti
+*/5 * * * *  = Every 5 minutes
 │   │ │ │ │
-│   │ │ │ └─── Giorno della settimana (0-7, 0 e 7 = domenica)
-│   │ │ └───── Mese (1-12)
-│   │ └─────── Giorno del mese (1-31)
-│   └───────── Ora (0-23)
-└─────────── Minuto (0-59)
+│   │ │ │ └─── Day of week (0-7, 0 and 7 = Sunday)
+│   │ │ └───── Month (1-12)
+│   │ └─────── Day of month (1-31)
+│   └───────── Hour (0-23)
+└─────────── Minute (0-59)
 ```
 
-### Configurazione consigliata
+### Default schedule
 
-La configurazione di default include:
+- **Email processing**: every 5 minutes
+- **Digest report**: every hour (sent via Google Chat)
 
-- **Elaborazione email**: ogni 5 minuti
-- **Report messaggi processati**: ogni ora (inviato via Google Chat)
-
-### Altri intervalli utili
+### Other useful intervals
 
 ```bash
-# Elaborazione ogni 10 minuti invece di 5
+# Process every 10 minutes instead of 5
 */10 * * * * cd /Users/stefano/sw/chino/janus && uv run python -m src.main >> /Users/stefano/sw/chino/janus/janus_cron.log 2>&1
 
-# Report ogni 2 ore invece di 1
+# Report every 2 hours instead of 1
 0 */2 * * * cd /Users/stefano/sw/chino/janus && uv run python -m src.report >> /Users/stefano/sw/chino/janus/janus_cron.log 2>&1
 
-# Report solo alle 9, 13, 17 (orario lavorativo)
+# Report only at 9, 13, 17 (business hours)
 0 9,13,17 * * 1-5 cd /Users/stefano/sw/chino/janus && uv run python -m src.report >> /Users/stefano/sw/chino/janus/janus_cron.log 2>&1
 
-# Solo in orario lavorativo (9-18, lun-ven)
+# Business hours only (9-18, Mon-Fri)
 */5 9-18 * * 1-5 cd /Users/stefano/sw/chino/janus && uv run python -m src.main >> /Users/stefano/sw/chino/janus/janus_cron.log 2>&1
 ```
 
-### Rimuovere crontab
+### Remove crontab entries
 
 ```bash
-# Rimuovi entry specifica
+# Remove a specific entry
 crontab -e
-# Cancella la riga di Janus e salva
+# Delete the Janus line and save
 
-# Rimuovi tutto il crontab
+# Remove the entire crontab
 crontab -r
 ```
 
 ### Log Rotation
 
-Per evitare che il file di log cresca troppo, configura la rotazione automatica:
+To prevent the log file from growing indefinitely:
 
 ```bash
 ./setup_logrotate.sh
 ```
 
-Lo script configura **newsyslog** (built-in su macOS) per:
+The script configures **newsyslog** (built-in on macOS) to:
 
-- Rotazione giornaliera
-- Mantiene 7 file (1 settimana)
-- Compressione automatica
-- Rotazione quando supera 10MB
+- Rotate daily
+- Keep 7 files (1 week)
+- Compress automatically
+- Rotate when the file exceeds 10 MB
 
-Vedi `logrotate.conf` per configurazione alternativa con logrotate (Homebrew).
+See `logrotate.conf` for an alternative configuration using logrotate (Homebrew).
 
 ### Troubleshooting
 
-**Cron non funziona?**
+**Cron not running?**
 
-1. Verifica permessi Full Disk Access per `cron` in System Preferences > Privacy & Security
-2. Controlla i log: `tail -f /Users/stefano/sw/chino/janus/janus_cron.log`
-3. Testa il comando manualmente:
+1. Check Full Disk Access permission for `cron` in System Preferences > Privacy & Security
+2. Check the logs: `tail -f /Users/stefano/sw/chino/janus/janus_cron.log`
+3. Test the command manually:
 
 ```bash
 cd /Users/stefano/sw/chino/janus && /Users/stefano/.virtualenvs/janus/bin/python -m src.main
@@ -117,21 +115,21 @@ cd /Users/stefano/sw/chino/janus && /Users/stefano/.virtualenvs/janus/bin/python
 
 **ModuleNotFoundError?**
 
-Se vedi errori come `ModuleNotFoundError: No module named 'dotenv'`, significa che cron non sta usando il virtualenv corretto. Assicurati di usare `uv run python` invece di chiamare direttamente `python`. `uv` si occuperà di creare e attivare il virtualenv automaticamente.
+If you see `ModuleNotFoundError: No module named 'dotenv'`, cron is not using the correct virtualenv. Use `uv run python` instead of calling `python` directly — `uv` will create and activate the virtualenv automatically.
 
-**Verifica log rotation:**
+**Verify log rotation:**
 
 ```bash
 # Test newsyslog
 sudo newsyslog -v
 
-# Vedi file ruotati
+# List rotated files
 ls -lh janus_cron.log*
 ```
 
-### Note importanti
+### Important notes
 
-- Il sistema di timestamp (`last_run.txt`) previene elaborazioni duplicate
-- Janus processa solo email più recenti dell'ultima esecuzione
-- I log vengono salvati in `janus_cron.log` per debugging
-- Le notifiche vengono inviate solo per email con urgenza > 2
+- The timestamp system (`last_run.txt`) prevents duplicate processing
+- Janus only processes emails newer than the last run
+- Logs are written to `janus_cron.log` for debugging
+- Notifications are sent only for emails with urgency > 2

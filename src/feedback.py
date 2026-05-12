@@ -69,7 +69,7 @@ def _add_sender_to_excluded(sender_email: str) -> bool:
     Returns:
         True if successfully added, False otherwise.
     """
-    excluded_file = Path("excluded_senders.txt")
+    excluded_file = Config.EXCLUDED_SENDERS_FILE
 
     try:
         # Read existing entries
@@ -85,7 +85,7 @@ def _add_sender_to_excluded(sender_email: str) -> bool:
         # Check if already exists
         sender_lower = sender_email.lower()
         if sender_lower in existing_entries:
-            print(f"ℹ️  '{sender_email}' già presente in excluded_senders.txt")
+            print(f"ℹ️  '{sender_email}' already in excluded_senders.txt")
             return True
 
         # Append to file
@@ -153,7 +153,7 @@ def _save_feedback(
     with open(Config.FEEDBACK_FILE, "w") as f:
         json.dump(feedback_data, f, indent=2, ensure_ascii=False)
 
-    print(f"✅ Feedback salvato per: {subject}")
+    print(f"✅ Feedback saved for: {subject}")
 
     # Add sender to excluded list if requested
     if add_to_excluded and sender_email:
@@ -162,18 +162,18 @@ def _save_feedback(
 
 def provide_feedback() -> None:
     """Interactive command to provide feedback on processed emails."""
-    print("📝 Sistema di Feedback per Valutazione Email\n")
+    print("📝 Email Feedback System\n")
 
     while True:
         # Load processed messages (reload each time for fresh data)
         processed = _load_processed_log()
 
         if not processed:
-            print("❌ Nessun messaggio processato da valutare.")
-            print("   Esegui prima 'poetry run python -m src.main'")
+            print("❌ No processed messages to review.")
+            print("   Run 'python -m src.main' first.")
             return
 
-        print(f"\nTrovati {len(processed)} messaggi processati.\n")
+        print(f"\n{len(processed)} processed messages found.\n")
 
         # Show list
         for i, entry in enumerate(processed, 1):
@@ -183,54 +183,54 @@ def provide_feedback() -> None:
             notified = entry.get("notified", False)
             notified_icon = "🔔" if notified else "🔕"
             print(f"{i}. {notified_icon} {subject}")
-            print(f"   Urgenza: {urgency}/5 | Categoria: {classification}\n")
+            print(f"   Urgency: {urgency}/5 | Category: {classification}\n")
 
         # Ask user to select
         try:
             choice = input(
-                "Seleziona il numero del messaggio da valutare (0 per uscire): "
+                "Select message number to review (0 to exit): "
             )
             choice_num = int(choice)
 
             if choice_num == 0:
-                print("👋 Uscita.")
+                print("👋 Exiting.")
                 return
 
             if choice_num < 1 or choice_num > len(processed):
-                print("❌ Selezione non valida.")
+                print("❌ Invalid selection.")
                 continue
 
             selected = processed[choice_num - 1]
 
         except (ValueError, KeyboardInterrupt):
-            print("\n❌ Operazione annullata.")
+            print("\n❌ Operation cancelled.")
             return
 
         # Show details
         print(f"\n{'=' * 60}")
-        print(f"Messaggio selezionato: {selected.get('subject', 'N/A')}")
-        print(f"Da: {selected.get('from', 'N/A')}")
-        print(f"Urgenza originale: {selected.get('urgency', 0)}/5")
-        print(f"Categoria originale: {selected.get('classification', 'N/A')}")
-        print(f"Analisi: {selected.get('analysis', 'N/A')}")
+        print(f"Selected message: {selected.get('subject', 'N/A')}")
+        print(f"From: {selected.get('from', 'N/A')}")
+        print(f"Original urgency: {selected.get('urgency', 0)}/5")
+        print(f"Original category: {selected.get('classification', 'N/A')}")
+        print(f"Analysis: {selected.get('analysis', 'N/A')}")
         print(f"{'=' * 60}\n")
 
         # Get feedback
         try:
             correct_urgency = int(
-                input("Urgenza corretta (1-5): ") or selected.get("urgency", 3)
+                input("Correct urgency (1-5): ") or selected.get("urgency", 3)
             )
             correct_urgency = max(1, min(5, correct_urgency))
 
             correct_classification = input(
-                f"Categoria corretta [{selected.get('classification', 'N/A')}]: "
+                f"Correct category [{selected.get('classification', 'N/A')}]: "
             ) or selected.get("classification", "N/A")
 
-            notes = input("Note aggiuntive (opzionale): ") or ""
+            notes = input("Additional notes (optional): ") or ""
 
             # Ask if sender should be added to excluded list
             add_to_excluded_input = input(
-                "Aggiungere questo mittente alla lista esclusi? (y/n) [n]: "
+                "Add this sender to the exclusion list? (y/n) [n]: "
             ).lower()
             add_to_excluded = add_to_excluded_input.startswith("y")
 
@@ -249,14 +249,14 @@ def provide_feedback() -> None:
                 sender_email,
             )
 
-            print("\n✅ Feedback registrato con successo!")
+            print("\n✅ Feedback recorded successfully!")
             print(
-                "\n💡 Usa 'poetry run python -m src.feedback --analyze' "
-                "per analizzare i feedback e aggiornare le regole.\n"
+                "\n💡 Run 'python -m src.feedback --analyze' "
+                "to analyse feedback and update the rules.\n"
             )
 
         except (ValueError, KeyboardInterrupt):
-            print("\n❌ Operazione annullata, torno alla lista.\n")
+            print("\n❌ Operation cancelled, returning to list.\n")
             continue
 
 
@@ -266,24 +266,24 @@ def analyze_feedback(clear_logs: bool = False) -> None:
     Args:
         clear_logs: If True, clear processed logs after analysis.
     """
-    print("🔍 Analisi Feedback e Generazione Regole\n")
+    print("🔍 Feedback Analysis & Rule Generation\n")
 
     if not os.path.exists(Config.FEEDBACK_FILE):
-        print("❌ Nessun feedback disponibile.")
+        print("❌ No feedback available.")
         return
 
     try:
         with open(Config.FEEDBACK_FILE, "r") as f:
             feedback_data = json.load(f)
     except (json.JSONDecodeError, FileNotFoundError):
-        print("❌ Errore lettura file feedback.")
+        print("❌ Error reading feedback file.")
         return
 
     if not feedback_data:
-        print("❌ Nessun feedback disponibile.")
+        print("❌ No feedback available.")
         return
 
-    print(f"Trovati {len(feedback_data)} feedback.\n")
+    print(f"{len(feedback_data)} feedback entries found.\n")
 
     # Analyze patterns
     urgency_adjustments = []
@@ -319,28 +319,28 @@ def analyze_feedback(clear_logs: bool = False) -> None:
 
     # Generate rules
     rules = []
-    rules.append("# Regole di Valutazione Email - Generate da Feedback\n")
-    rules.append(f"# Generato: {datetime.now().isoformat()}\n")
-    rules.append(f"# Basato su {len(feedback_data)} feedback\n\n")
+    rules.append("# Email Evaluation Rules - Generated from Feedback\n")
+    rules.append(f"# Generated: {datetime.now().isoformat()}\n")
+    rules.append(f"# Based on {len(feedback_data)} feedback entries\n\n")
 
     if urgency_adjustments:
-        rules.append("## Aggiustamenti Urgenza:\n")
+        rules.append("## Urgency Adjustments:\n")
         for adj in urgency_adjustments:
-            rules.append(f"- '{adj['subject']}': urgenza {adj['from']} → {adj['to']}")
+            rules.append(f"- '{adj['subject']}': urgency {adj['from']} → {adj['to']}")
             if adj["notes"]:
-                rules.append(f"  Note: {adj['notes']}")
+                rules.append(f"  Notes: {adj['notes']}")
             rules.append("\n")
 
     if classification_changes:
-        rules.append("\n## Cambiamenti Classificazione:\n")
+        rules.append("\n## Classification Changes:\n")
         for change in classification_changes:
             rules.append(f"- '{change['subject']}': {change['from']} → {change['to']}")
             if change["notes"]:
-                rules.append(f"  Note: {change['notes']}")
+                rules.append(f"  Notes: {change['notes']}")
             rules.append("\n")
 
     # Add general patterns
-    rules.append("\n## Regole Generali da Applicare:\n")
+    rules.append("\n## General Rules to Apply:\n")
     rules.append(
         "- Email di calendario (Accepted/Declined): urgenza 1, categoria Information\n"
     )
@@ -354,7 +354,7 @@ def analyze_feedback(clear_logs: bool = False) -> None:
     with open(Config.RULES_FILE, "w") as f:
         f.writelines(rules)
 
-    print(f"✅ Regole salvate in: {Config.RULES_FILE}\n")
+    print(f"✅ Rules saved to: {Config.RULES_FILE}\n")
     print("Contenuto regole:")
     print("".join(rules))
 
@@ -366,16 +366,16 @@ def analyze_feedback(clear_logs: bool = False) -> None:
 
 def _clear_processed_logs_silent() -> None:
     """Clear processed logs without confirmation (internal use)."""
-    print("\n🗑️  Svuotamento File Log Messaggi Processati\n")
+    print("\n🗑️  Clearing Processed Message Log Files\n")
 
     files_to_clear = []
     if os.path.exists(Config.PROCESSED_LOG_FILE):
-        files_to_clear.append((Config.PROCESSED_LOG_FILE, "non notificati"))
+        files_to_clear.append((Config.PROCESSED_LOG_FILE, "not notified"))
     if os.path.exists(Config.NOTIFIED_LOG_FILE):
-        files_to_clear.append((Config.NOTIFIED_LOG_FILE, "notificati"))
+        files_to_clear.append((Config.NOTIFIED_LOG_FILE, "notified"))
 
     if not files_to_clear:
-        print("✅ Nessun file log da svuotare.")
+        print("✅ No log files to clear.")
         return
 
     # Clear files
@@ -387,48 +387,48 @@ def _clear_processed_logs_silent() -> None:
                 count = len(data)
             with open(filepath, "w") as f:
                 json.dump([], f)
-            print(f"✅ Svuotato: {desc} ({count} messaggi)")
+            print(f"✅ Cleared: {desc} ({count} messages)")
             cleared += 1
         except Exception as e:
-            print(f"❌ Errore svuotamento {desc}: {e}")
+            print(f"❌ Error clearing {desc}: {e}")
 
-    print(f"\n✅ {cleared} file svuotati con successo!")
+    print(f"\n✅ {cleared} files cleared successfully!")
 
 
 def clear_processed_logs() -> None:
     """Clear processed message log files after learning from feedback."""
-    print("🗑️  Svuotamento File Log Messaggi Processati\n")
+    print("🗑️  Clearing Processed Message Log Files\n")
 
     files_to_clear = []
     if os.path.exists(Config.PROCESSED_LOG_FILE):
-        files_to_clear.append((Config.PROCESSED_LOG_FILE, "non notificati"))
+        files_to_clear.append((Config.PROCESSED_LOG_FILE, "not notified"))
     if os.path.exists(Config.NOTIFIED_LOG_FILE):
-        files_to_clear.append((Config.NOTIFIED_LOG_FILE, "notificati"))
+        files_to_clear.append((Config.NOTIFIED_LOG_FILE, "notified"))
 
     if not files_to_clear:
-        print("✅ Nessun file log da svuotare.")
+        print("✅ No log files to clear.")
         return
 
-    print("File da svuotare:")
+    print("Files to clear:")
     for filepath, desc in files_to_clear:
         try:
             with open(filepath, "r") as f:
                 data = json.load(f)
                 count = len(data)
-            print(f"  • {desc}: {count} messaggi")
+            print(f"  • {desc}: {count} messages")
         except Exception:
-            print(f"  • {desc}: file vuoto o non valido")
+            print(f"  • {desc}: empty or invalid file")
 
-    print("\n⚠️  Questa operazione cancellerà tutti i messaggi processati dai file log.")
+    print("\n⚠️  This will permanently delete all processed messages from the log files.")
     print(
-        "Assicurati di aver già dato feedback e analizzato con "
-        "'--analyze' prima di procedere.\n"
+        "Make sure you have already provided feedback and run "
+        "'--analyze' before proceeding.\n"
     )
 
-    response = input("Vuoi procedere? (y/n): ")
+    response = input("Proceed? (y/n): ")
 
     if not response.lower().startswith("y"):
-        print("❌ Operazione annullata.")
+        print("❌ Operation cancelled.")
         return
 
     # Clear files
@@ -437,23 +437,23 @@ def clear_processed_logs() -> None:
         try:
             with open(filepath, "w") as f:
                 json.dump([], f)
-            print(f"✅ Svuotato: {desc}")
+            print(f"✅ Cleared: {desc}")
             cleared += 1
         except Exception as e:
-            print(f"❌ Errore svuotamento {desc}: {e}")
+            print(f"❌ Error clearing {desc}: {e}")
 
-    print(f"\n✅ {cleared} file svuotati con successo!")
-    print("\nI messaggi futuri verranno salvati nei file log per nuovi feedback.")
+    print(f"\n✅ {cleared} files cleared successfully!")
+    print("\nFuture messages will be saved to the log files for new feedback.")
 
 
 def export_feedback_template() -> None:
     """Export processed messages to CSV for manual feedback editing."""
-    print("📤 Esportazione Template Feedback\n")
+    print("📤 Exporting Feedback Template\n")
 
     processed = _load_processed_log()
 
     if not processed:
-        print("❌ Nessun messaggio processato da esportare.")
+        print("❌ No processed messages to export.")
         return
 
     # Create exports directory if it doesn't exist
@@ -488,31 +488,31 @@ def export_feedback_template() -> None:
                         "subject": entry.get("subject", ""),
                         "sender_email": entry.get("from", ""),
                         "original_urgency": entry.get("urgency", ""),
-                        "correct_urgency": "",  # Da compilare
+                        "correct_urgency": "",  # Fill in
                         "original_classification": entry.get("classification", ""),
-                        "correct_classification": "",  # Da compilare
-                        "notes": "",  # Da compilare
-                        "add_to_excluded": "",  # Da compilare (y/n)
+                        "correct_classification": "",  # Fill in
+                        "notes": "",  # Fill in
+                        "add_to_excluded": "",  # Fill in (y/n)
                     }
                 )
 
-        print(f"✅ Template esportato: {csv_file}")
-        print(f"   Messaggi esportati: {len(processed)}\n")
-        print("📝 Istruzioni:")
-        print("   1. Apri il file CSV con Excel/Numbers/LibreOffice")
-        print("   2. Compila le colonne:")
-        print("      - correct_urgency: urgenza corretta (1-5)")
-        print("      - correct_classification: categoria corretta (opzionale)")
-        print("      - notes: note aggiuntive (opzionale)")
-        print("      - add_to_excluded: y per aggiungere a lista esclusi (opzionale)")
-        print("   3. Salva il file")
+        print(f"✅ Template exported: {csv_file}")
+        print(f"   Messages exported: {len(processed)}\n")
+        print("📝 Instructions:")
+        print("   1. Open the CSV file with Excel/Numbers/LibreOffice")
+        print("   2. Fill in the columns:")
+        print("      - correct_urgency: correct urgency (1-5)")
+        print("      - correct_classification: correct category (optional)")
+        print("      - notes: additional notes (optional)")
+        print("      - add_to_excluded: y to add to exclusion list (optional)")
+        print("   3. Save the file")
         print(
-            "   4. Importa: poetry run python -m src.feedback --import "
+            "   4. Import: python -m src.feedback --import "
             "feedback_template.csv\n"
         )
 
     except Exception as e:
-        print(f"❌ Errore esportazione: {e}")
+        print(f"❌ Export error: {e}")
 
 
 def import_feedback_from_csv(csv_file: str) -> None:

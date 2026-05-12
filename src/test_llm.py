@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Script di test per validare la classificazione LLM delle email."""
+"""Test script for validating LLM email classification."""
 
 from __future__ import annotations
 
@@ -13,15 +13,15 @@ from src.llm_processor import LLMProcessor
 
 
 def load_test_emails(filepath: str = "test_emails.json") -> list[dict]:
-    """Carica le email di test dal file JSON.
+    """Load test emails from JSON file.
 
     Args:
-        filepath: Percorso del file JSON con le email di test.
+        filepath: Path to the JSON file containing test emails.
 
     Returns:
-        Lista di dizionari contenenti le email di test.
+        List of dicts with test email data.
     """
-    # Cerca il file nella directory src se non esiste nella directory corrente
+    # Fall back to src/ directory if not found in current directory
     if not os.path.exists(filepath):
         filepath = os.path.join("src", filepath)
 
@@ -30,13 +30,13 @@ def load_test_emails(filepath: str = "test_emails.json") -> list[dict]:
 
 
 def format_email_content(email: dict) -> str:
-    """Formatta il contenuto dell'email per l'analisi LLM.
+    """Format email content for LLM analysis.
 
     Args:
-        email: Dizionario con i dati dell'email.
+        email: Dict with email data.
 
     Returns:
-        Stringa formattata con il contenuto dell'email.
+        Formatted string with email content.
     """
     return f"""Subject: {email["subject"]}
 From: {email["from"]}
@@ -46,16 +46,16 @@ To: {email["to"]}
 
 
 def print_separator(char: str = "=", length: int = 80) -> None:
-    """Stampa una linea separatrice."""
+    """Print a separator line."""
     print(char * length)
 
 
 def print_analysis_result(email: dict, analysis) -> None:
-    """Stampa i risultati dell'analisi in formato leggibile.
+    """Print analysis results in a readable format.
 
     Args:
-        email: Dizionario con i dati dell'email originale.
-        analysis: Oggetto EmailAnalysis con i risultati.
+        email: Dict with the original email data.
+        analysis: EmailAnalysis object with results.
     """
     print_separator()
     print(f"📧 EMAIL ID: {email['id']}")
@@ -69,7 +69,7 @@ def print_analysis_result(email: dict, analysis) -> None:
         print(f"\n🏷️  CLASSIFICAZIONE: {analysis.classification}")
         print(f"🔥 URGENZA: {analysis.urgency}/5 {urgency_stars}")
         print(f"📝 ANALISI: {analysis.analysis}")
-        print(f"✉️  RICHIEDE RISPOSTA: {'Sì' if analysis.needs_reply else 'No'}")
+        print(f"✉️  NEEDS REPLY: {'Yes' if analysis.needs_reply else 'No'}")
 
         if analysis.needs_reply and analysis.draft_body:
             print("\n💬 BOZZA RISPOSTA SUGGERITA:")
@@ -83,11 +83,11 @@ def print_analysis_result(email: dict, analysis) -> None:
 
 
 def test_individual_analysis(llm: LLMProcessor, emails: list[dict]) -> None:
-    """Testa l'analisi individuale di ogni email.
+    """Test individual analysis of each email.
 
     Args:
-        llm: Istanza di LLMProcessor.
-        emails: Lista di email da analizzare.
+        llm: LLMProcessor instance.
+        emails: List of emails to analyse.
     """
     print("\n" + "=" * 80)
     print("🧪 TEST ANALISI INDIVIDUALE")
@@ -100,37 +100,34 @@ def test_individual_analysis(llm: LLMProcessor, emails: list[dict]) -> None:
 
 
 def test_batch_analysis(llm: LLMProcessor, emails: list[dict]) -> None:
-    """Testa l'analisi batch di tutte le email.
+    """Test batch analysis of all emails.
 
     Args:
-        llm: Istanza di LLMProcessor.
-        emails: Lista di email da analizzare.
+        llm: LLMProcessor instance.
+        emails: List of emails to analyse.
     """
     print("\n" + "=" * 80)
-    print("🧪 TEST ANALISI BATCH")
+    print("🧪 BATCH ANALYSIS TEST")
     print("=" * 80 + "\n")
 
-    # Prepara i contenuti per l'analisi batch
     thread_contents = [(email["id"], format_email_content(email)) for email in emails]
 
-    print("\n📦 Analizzando " + str(len(thread_contents)) + " email in batch...\n")
+    print("\n📦 Analysing " + str(len(thread_contents)) + " emails in batch...\n")
 
-    # Esegui analisi batch
     results = llm.analyze_threads_batch(thread_contents)
 
-    # Stampa risultati
     for (thread_id, analysis), email in zip(results, emails):
         print_analysis_result(email, analysis)
 
 
 def test_connection(llm: LLMProcessor) -> bool:
-    """Testa la connessione al modello LLM.
+    """Test the LLM model connection.
 
     Args:
-        llm: Istanza di LLMProcessor.
+        llm: LLMProcessor instance.
 
     Returns:
-        True se la connessione è riuscita, False altrimenti.
+        True if the connection succeeded, False otherwise.
     """
     print("\n" + "=" * 80)
     print("🔌 TEST CONNESSIONE LLM")
@@ -138,15 +135,15 @@ def test_connection(llm: LLMProcessor) -> bool:
 
     test_email = {
         "id": "test_connection",
-        "subject": "Test connessione",
+        "subject": "Connection test",
         "from": "test@example.com",
         "to": "stefano@chino.io",
-        "content": "Questo è un messaggio di test per verificare la connessione al modello LLM.",
+        "content": "This is a test message to verify the LLM model connection.",
     }
 
     content = format_email_content(test_email)
 
-    print("📤 Invio messaggio di test al modello LLM...")
+    print("📤 Sending test message to the LLM model...")
     print(f"   Provider: {Config.LLM_PROVIDER}")
     print(f"   Model: {Config.LLM_MODEL}")
     if Config.LLM_PROVIDER == "ollama":
@@ -156,31 +153,31 @@ def test_connection(llm: LLMProcessor) -> bool:
     try:
         analysis = llm.analyze_thread(content)
         if analysis:
-            print("✅ CONNESSIONE RIUSCITA!\n")
-            print(f"🏷️  Classificazione: {analysis.classification}")
-            print(f"🔥 Urgenza: {analysis.urgency}/5")
-            print(f"📝 Analisi: {analysis.analysis}")
+            print("✅ CONNECTION SUCCESSFUL!\n")
+            print(f"🏷️  Classification: {analysis.classification}")
+            print(f"🔥 Urgency: {analysis.urgency}/5")
+            print(f"📝 Analysis: {analysis.analysis}")
             print("\n" + "=" * 80)
-            print("✅ Il modello LLM è raggiungibile e funzionante")
+            print("✅ LLM model is reachable and working")
             print("=" * 80 + "\n")
             return True
         else:
-            print("❌ CONNESSIONE FALLITA: Nessuna risposta dal modello")
+            print("❌ CONNECTION FAILED: No response from model")
             return False
     except Exception as e:
-        print(f"❌ CONNESSIONE FALLITA: {e}")
+        print(f"❌ CONNECTION FAILED: {e}")
         print("\n" + "=" * 80)
-        print("💡 SUGGERIMENTI:")
+        print("💡 TIPS:")
         if Config.LLM_PROVIDER == "ollama":
-            print("   - Verifica che Ollama sia in esecuzione: ollama serve")
+            print("   - Check that Ollama is running: ollama serve")
             print(
-                f"   - Verifica che il modello '{Config.LLM_MODEL}' sia installato: ollama list"
+                f"   - Check that model '{Config.LLM_MODEL}' is installed: ollama list"
             )
-            print(f"   - Se non installato, esegui: ollama pull {Config.LLM_MODEL}")
-            print(f"   - Verifica l'URL: {Config.OLLAMA_BASE_URL}")
+            print(f"   - If not installed, run: ollama pull {Config.LLM_MODEL}")
+            print(f"   - Check the URL: {Config.OLLAMA_BASE_URL}")
         elif Config.LLM_PROVIDER == "gemini":
-            print("   - Verifica che GEMINI_API_KEY sia configurata correttamente")
-            print("   - Verifica la connessione internet")
+            print("   - Check that GEMINI_API_KEY is set correctly")
+            print("   - Check your internet connection")
         print("=" * 80 + "\n")
         return False
 
@@ -189,66 +186,60 @@ def main() -> None:
     """Funzione principale del test."""
     # Parse argomenti
     parser = argparse.ArgumentParser(
-        description="Test per validare la classificazione LLM delle email"
+        description="Test script for LLM email classification"
     )
     parser.add_argument(
         "--test-connection",
         action="store_true",
-        help="Esegui solo il test di connessione al modello LLM",
+        help="Run only the LLM connection test",
     )
     args = parser.parse_args()
 
     print("\n" + "=" * 80)
-    print("🚀 JANUS LLM TEST - Classificazione Email")
+    print("🚀 JANUS LLM TEST - Email Classification")
     print("=" * 80)
 
-    # Valida configurazione
     try:
         Config.validate()
     except Exception as e:
-        print(f"\n❌ Errore configurazione: {e}")
-        print("\nAssicurati di aver configurato correttamente il file .env")
+        print(f"\n❌ Configuration error: {e}")
+        print("\nMake sure the .env file is set up correctly.")
         sys.exit(1)
 
-    # Mostra configurazione LLM
-    print("\n⚙️  CONFIGURAZIONE LLM:")
+    print("\n⚙️  LLM CONFIGURATION:")
     print(f"   Provider: {Config.LLM_PROVIDER}")
     print(f"   Model: {Config.LLM_MODEL}")
     print(f"   Temperature: {Config.LLM_TEMPERATURE}")
     if Config.LLM_PROVIDER == "ollama":
         print(f"   Ollama URL: {Config.OLLAMA_BASE_URL}")
 
-    # Inizializza LLM processor
-    print("\n🤖 Inizializzazione LLM processor...")
+    print("\n🤖 Initialising LLM processor...")
     try:
         llm = LLMProcessor()
-        print("✅ LLM processor inizializzato correttamente")
+        print("✅ LLM processor initialised successfully")
     except Exception as e:
-        print(f"❌ Errore inizializzazione LLM: {e}")
+        print(f"❌ LLM initialisation error: {e}")
         sys.exit(1)
 
-    # Se richiesto solo test connessione
     if args.test_connection:
         success = test_connection(llm)
         sys.exit(0 if success else 1)
 
-    # Carica email di test
     try:
         emails = load_test_emails()
-        print(f"\n✅ Caricate {len(emails)} email di test")
+        print(f"\n✅ Loaded {len(emails)} test emails")
     except FileNotFoundError:
-        print("\n❌ File test_emails.json non trovato!")
+        print("\n❌ test_emails.json not found!")
         sys.exit(1)
 
-    # Chiedi all'utente quale test eseguire
     print("\n" + "=" * 80)
-    print("Scegli il tipo di test:")
-    print("  1 - Analisi individuale (una email alla volta)")
-    print("  2 - Analisi batch (tutte le email insieme)")
-    print("  3 - Entrambi")
+    print("Choose test type:")
+    print("  1 - Individual analysis (one email at a time)")
+    print("  2 - Batch analysis (all emails together)")
+    print("  3 - Both")
     print("=" * 80)
 
-    choice = input("\nScelta [1/2/3]: ").strip()
+    choice = input("\nChoice [1/2/3]: ").strip()
 
     if choice == "1":
         test_individual_analysis(llm, emails)
@@ -258,11 +249,11 @@ def main() -> None:
         test_individual_analysis(llm, emails)
         test_batch_analysis(llm, emails)
     else:
-        print("❌ Scelta non valida")
+        print("❌ Invalid choice")
         sys.exit(1)
 
     print("\n" + "=" * 80)
-    print("✅ TEST COMPLETATO")
+    print("✅ TEST COMPLETE")
     print("=" * 80 + "\n")
 
 

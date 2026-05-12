@@ -17,25 +17,25 @@ def get_dummy_urgent_data():
     return [
         {
             "thread_id": "194208a8a8a8a8a8",
-            "subject": "⚠️ Problema critico produzione Edwin",
+            "subject": "⚠️ Critical production issue: Edwin",
             "from": "monitoring@chino.io",
             "to": "stefano@chino.io",
             "urgency": 5,
             "classification": "Urgent",
-            "analysis": "È stato rilevato un errore critico nel sistema Edwin che richiede intervento immediato.",
+            "analysis": "A critical error was detected in the Edwin system that requires immediate attention.",
             "needs_reply": True,
-            "draft_body": "Ciao, ho ricevuto la segnalazione. Me ne occupo subito e vi aggiorno tra 15 minuti.",
+            "draft_body": "Hi, I received the alert. I'm on it and will update you in 15 minutes.",
         },
         {
             "thread_id": "194208b8b8b8b8b8",
-            "subject": "Richiesta ferie: Mario Rossi",
+            "subject": "Leave request: Mario Rossi",
             "from": "mario.rossi@chino.io",
             "to": "stefano@chino.io",
             "urgency": 3,
             "classification": "Inquiry",
-            "analysis": "Mario richiede ferie per la prossima settimana. È necessario approvare o rifiutare.",
+            "analysis": "Mario is requesting leave for next week. Approval or rejection required.",
             "needs_reply": True,
-            "draft_body": "Ciao Mario, ferie approvate. Buona vacanza!",
+            "draft_body": "Hi Mario, leave approved. Enjoy your holiday!",
         },
     ]
 

@@ -1,34 +1,43 @@
 # --- Janus - Git Ignore ---
 
-# Sensible (MAI committare questi!)
+# Secrets (never commit these)
 .env
 credentials.json
 token.json
 
-# Stato e Log locali
+# Runtime state & logs
 last_run.txt
 *.log
 processed_not_notified.json
 processed_notified.json
 feedback.json
 mailing_list.json
-# Ambiente Python e Dipendenze
+
+# User-specific config (lives in DATA_DIR on server)
+excluded_senders.txt
+evaluation_rules.txt
+
+# Python
 .venv/
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Strumenti di sistema e IDE
+# OS / IDE
 .DS_Store
 Thumbs.db
 .idea/
 .vscode/
 
-# Script locali/temporanei (opzionali)
+# Local tooling state
 .poetrysync
 .pull
-/tmp/
+.uvsync
 .deploy_config
-excluded_senders.txt
-evaluation_rules.txt
+logrotate.conf
+logrotate.state
+
+# Claude Code internal
+.claude/
+
 exports/*

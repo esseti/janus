@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 
@@ -9,6 +10,10 @@ load_dotenv()
 
 class Config:
     """Configuration for Janus email processor."""
+
+    # Base directory for all runtime data files (secrets, state, logs).
+    # Set JANUS_DATA_DIR env var when running in Docker with a mounted volume.
+    DATA_DIR = Path(os.getenv("JANUS_DATA_DIR", "."))
 
     LLM_PROVIDER = os.getenv("LLM_PROVIDER", "gemini")
     LLM_MODEL = os.getenv("LLM_MODEL", "gemini-3-flash-preview")
@@ -20,14 +25,16 @@ class Config:
     USER_NAME = os.getenv("USER_NAME", "")
     TARGET_LABEL = os.getenv("TARGET_LABEL", "janus")
     POLLING_INTERVAL = int(os.getenv("POLLING_INTERVAL", "600"))
-    CREDENTIALS_FILE = "credentials.json"
-    TOKEN_FILE = "token.json"
-    LAST_RUN_FILE = "last_run.txt"
-    PROCESSED_LOG_FILE = "processed_not_notified.json"
-    NOTIFIED_LOG_FILE = "processed_notified.json"
-    FEEDBACK_FILE = "feedback.json"
-    RULES_FILE = "evaluation_rules.txt"
-    MAILING_LIST_LOG_FILE = "mailing_list.json"
+    CREDENTIALS_FILE = DATA_DIR / "credentials.json"
+    TOKEN_FILE = DATA_DIR / "token.json"
+    LAST_RUN_FILE = DATA_DIR / "last_run.txt"
+    PROCESSED_LOG_FILE = DATA_DIR / "processed_not_notified.json"
+    NOTIFIED_LOG_FILE = DATA_DIR / "processed_notified.json"
+    FEEDBACK_FILE = DATA_DIR / "feedback.json"
+    RULES_FILE = DATA_DIR / "evaluation_rules.txt"
+    MAILING_LIST_LOG_FILE = DATA_DIR / "mailing_list.json"
+    EXCLUDED_SENDERS_FILE = DATA_DIR / "excluded_senders.txt"
+    KEEP_SENDERS_FILE = DATA_DIR / "keep_senders.txt"
 
     @classmethod
     def validate(cls) -> None:

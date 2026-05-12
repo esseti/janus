@@ -1,11 +1,40 @@
+# Secrets and runtime state — never bake into the image
 .env
 credentials.json
 token.json
+last_run.txt
+*.log
+processed_not_notified.json
+processed_notified.json
+feedback.json
+mailing_list.json
+
+# User config (deployed separately to the data volume)
+excluded_senders.txt
+keep_senders.txt
+evaluation_rules.txt
+
+# Python artifacts
 .venv
 __pycache__
-*.log
-last_run.txt
-*.json
+*.pyc
+*.pyo
+
+# Git / IDE / OS
 .git
 .github
+.claude
 .DS_Store
+.idea
+.vscode
+
+# Deploy artifacts
+.deploy_config
+logrotate.conf
+logrotate.state
+
+# Docs and tests (not needed at runtime)
+docs/
+exports/
+test_emails.json
+test_*.py

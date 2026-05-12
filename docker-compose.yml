@@ -1,0 +1,19 @@
+services:
+  janus:
+    image: ${JANUS_IMAGE:-ghcr.io/esseti/janus:latest}
+    env_file: .env
+    volumes:
+      - .:/data
+    restart: "no"
+
+  # One-time OAuth bootstrap to generate token.json.
+  # Run with:  docker compose run --rm --service-ports auth
+  # Then open http://localhost:8080 in your browser when prompted.
+  auth:
+    image: ${JANUS_IMAGE:-ghcr.io/esseti/janus:latest}
+    env_file: .env
+    volumes:
+      - .:/data
+    ports:
+      - "8080:8080"
+    command: ["python", "-m", "src.auth"]

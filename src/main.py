@@ -137,7 +137,7 @@ def run_janus() -> None:
         return
 
     # Filter messages where user is recipient and sender is not no-reply
-    print(f"🔍 Filtro messaggi dove {Config.USER_EMAIL} è destinatario...")
+    print(f"🔍 Filtering messages where {Config.USER_EMAIL} is a recipient...")
     filtered_messages = []
     mailing_list_count = 0
 
