@@ -438,12 +438,24 @@
 <section id="setup">
   <div class="container">
     <p class="section-label">Setup</p>
-    <h2 class="section-title">Up and running<br>in four steps</h2>
+    <h2 class="section-title">Up and running<br>in five steps</h2>
     <p class="section-sub">No clone, no build. You just need a folder with the right files in it, and Docker.</p>
 
     <div class="setup-grid">
       <div class="setup-card">
         <div class="num">Step 01</div>
+        <h3>Create Google OAuth credentials</h3>
+        <p>Janus needs access to your Gmail inbox via OAuth. Create a <strong>Desktop app</strong> OAuth client on Google Cloud.</p>
+        <ol style="color:var(--muted);font-size:.88rem;line-height:2;margin-top:.75rem;padding-left:1.2rem;">
+          <li>Open <a href="https://console.cloud.google.com/apis/library/gmail.googleapis.com" target="_blank" style="color:var(--accent2)">Gmail API</a> and click <strong>Enable</strong></li>
+          <li>Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color:var(--accent2)">Credentials</a> → <strong>Create Credentials → OAuth client ID</strong></li>
+          <li>Choose application type <strong>Desktop app</strong>, give it a name</li>
+          <li>Click <strong>Download JSON</strong> and save it as <code>credentials.json</code></li>
+        </ol>
+      </div>
+
+      <div class="setup-card">
+        <div class="num">Step 02</div>
         <h3>Create a folder, grab the bootstrap files</h3>
         <p>Three small files via <code>curl</code>. No git clone, no Python install.</p>
         <div class="code-block">
@@ -457,7 +469,7 @@ mv .env.example .env</pre>
       </div>
 
       <div class="setup-card">
-        <div class="num">Step 02</div>
+        <div class="num">Step 03</div>
         <h3>Fill in <code>.env</code> &amp; drop credentials</h3>
         <p>Edit <code>.env</code> with your Gemini key, Google Chat webhook, and email. For <code>credentials.json</code>: go to <a href="https://console.cloud.google.com" target="_blank" style="color:var(--accent2)">Google Cloud Console</a> → APIs &amp; Services → Enable the <strong>Gmail API</strong> → Credentials → Create OAuth client ID (type: <strong>Desktop app</strong>) → Download JSON. Set its path in <code>.env</code>.</p>
         <div class="code-block">
@@ -471,7 +483,7 @@ CREDENTIALS_FILE=/path/to/credentials.json</pre>
       </div>
 
       <div class="setup-card">
-        <div class="num">Step 03</div>
+        <div class="num">Step 04</div>
         <h3>Authorise Gmail via Docker</h3>
         <p>The auth helper runs <em>inside</em> the container and exposes a callback on port 8080. Open the printed URL, sign in, done.</p>
         <div class="code-block">
@@ -484,7 +496,7 @@ ssh -L 8080:localhost:8080 user@server</pre>
       </div>
 
       <div class="setup-card">
-        <div class="num">Step 04</div>
+        <div class="num">Step 05</div>
         <h3>Run the setup script</h3>
         <p>It pulls the image, initialises the state files, and installs the crontab. After this, Janus runs on its own.</p>
         <div class="code-block">
