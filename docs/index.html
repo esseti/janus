@@ -287,7 +287,7 @@
     Janus is a self-hosted Gmail triage assistant. It monitors your Gmail inbox, analyses every thread with an LLM, and surfaces only what truly needs your attention — the rest is handled automatically.
   </p>
   <div class="hero-actions">
-    <a class="btn-primary" href="https://github.com/esseti/janus" target="_blank">Get started →</a>
+    <a class="btn-primary" href="#setup">Get started →</a>
     <a class="btn-ghost" href="#how">See how it works</a>
   </div>
 
@@ -438,75 +438,122 @@
 <section id="setup">
   <div class="container">
     <p class="section-label">Setup</p>
-    <h2 class="section-title">Up and running<br>in five steps</h2>
-    <p class="section-sub">No clone, no build. You just need a folder with the right files in it, and Docker.</p>
+    <h2 class="section-title">Two phases:<br>laptop, then server</h2>
+    <p class="section-sub">The OAuth token must be generated on your laptop (it needs a browser). Then you copy a few files to the server and you're done.</p>
 
+    <!-- LAZY ONE-LINER -->
+    <div style="
+      margin-top:3rem;
+      background: linear-gradient(135deg, rgba(99,102,241,.12) 0%, rgba(129,140,248,.06) 100%);
+      border: 1px solid rgba(99,102,241,.35);
+      border-radius: 16px; padding: 1.8rem 2rem;
+    ">
+      <div style="display:flex;align-items:center;gap:.7rem;margin-bottom:.6rem;">
+        <span style="font-size:1.4rem">⚡</span>
+        <span style="font-size:.72rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)">I'm lazy — one command</span>
+      </div>
+      <p style="color:var(--text);font-size:1rem;font-weight:600;margin-bottom:.35rem;">
+        Have Docker, <code>ssh</code>, and <code>scp</code>? Just run this on your laptop and follow the prompts.
+      </p>
+      <p style="color:var(--muted);font-size:.88rem;margin-bottom:1rem;line-height:1.6;">
+        The script guides you through the full setup — OAuth credentials, API keys, auth flow, and server deployment — all in one shot.
+      </p>
+      <div class="code-block">
+        <button class="copy-btn" type="button">Copy</button>
+        <pre>bash &lt;(curl -fsSL https://raw.githubusercontent.com/esseti/janus/main/setup.sh)</pre>
+      </div>
+    </div>
+
+    <p style="font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:3rem;margin-bottom:.5rem;">Or follow the steps manually</p>
+    <p style="font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-top:1rem;margin-bottom:.75rem;">Phase 1 — On your laptop</p>
     <div class="setup-grid">
+
       <div class="setup-card">
         <div class="num">Step 01</div>
         <h3>Create Google OAuth credentials</h3>
-        <p>Janus needs access to your Gmail inbox via OAuth. Create a <strong>Desktop app</strong> OAuth client on Google Cloud.</p>
+        <p>Janus needs OAuth access to your Gmail. Create a <strong>Desktop app</strong> client on Google Cloud.</p>
         <ol style="color:var(--muted);font-size:.88rem;line-height:2;margin-top:.75rem;padding-left:1.2rem;">
           <li>Open <a href="https://console.cloud.google.com/apis/library/gmail.googleapis.com" target="_blank" style="color:var(--accent2)">Gmail API</a> and click <strong>Enable</strong></li>
           <li>Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color:var(--accent2)">Credentials</a> → <strong>Create Credentials → OAuth client ID</strong></li>
-          <li>Choose application type <strong>Desktop app</strong>, give it a name</li>
-          <li>Click <strong>Download JSON</strong> and save it as <code>credentials.json</code></li>
+          <li>Choose <strong>Desktop app</strong>, give it a name, click Create</li>
+          <li>Click <strong>Download JSON</strong> — save it as <code>credentials.json</code></li>
         </ol>
       </div>
 
       <div class="setup-card">
         <div class="num">Step 02</div>
-        <h3>Create a folder, grab the bootstrap files</h3>
-        <p>Three small files via <code>curl</code>. No git clone, no Python install.</p>
+        <h3>Grab the bootstrap files &amp; fill in <code>.env</code></h3>
+        <p>Download the two config files and edit <code>.env</code> with your keys.</p>
         <div class="code-block">
           <button class="copy-btn" type="button">Copy</button>
           <pre>mkdir -p ~/janus &amp;&amp; cd ~/janus
 curl -fsSLO https://raw.githubusercontent.com/esseti/janus/main/docker-compose.yml
 curl -fsSLO https://raw.githubusercontent.com/esseti/janus/main/.env.example
-curl -fsSLO https://raw.githubusercontent.com/esseti/janus/main/server-setup.sh
 mv .env.example .env</pre>
+        </div>
+        <div class="code-block" style="margin-top:.75rem">
+          <button class="copy-btn" type="button">Copy</button>
+          <pre><span class="c"># minimum required in .env</span>
+GEMINI_API_KEY=...
+GOOGLE_CHAT_WEBHOOK=...
+USER_EMAIL=you@example.com</pre>
         </div>
       </div>
 
       <div class="setup-card">
         <div class="num">Step 03</div>
-        <h3>Fill in <code>.env</code> &amp; drop credentials</h3>
-        <p>Edit <code>.env</code> with your Gemini key, Google Chat webhook, and email. For <code>credentials.json</code>: go to <a href="https://console.cloud.google.com" target="_blank" style="color:var(--accent2)">Google Cloud Console</a> → APIs &amp; Services → Enable the <strong>Gmail API</strong> → Credentials → Create OAuth client ID (type: <strong>Desktop app</strong>) → Download JSON. Set its path in <code>.env</code>.</p>
-        <div class="code-block">
-          <button class="copy-btn" type="button">Copy</button>
-          <pre><span class="c"># required in .env</span>
-GEMINI_API_KEY=...
-GOOGLE_CHAT_WEBHOOK=...
-USER_EMAIL=you@example.com
-CREDENTIALS_FILE=/path/to/credentials.json</pre>
-        </div>
-      </div>
-
-      <div class="setup-card">
-        <div class="num">Step 04</div>
-        <h3>Authorise Gmail — run this on your laptop</h3>
-        <p>The OAuth flow needs a browser, so run this locally (not on the server). Docker is enough — no Python needed. Open the printed URL, sign in, and the container writes <code>token.json</code> for you.</p>
+        <h3>Generate <code>token.json</code> — needs a browser</h3>
+        <p>Run the auth container locally. It opens a callback on <code>localhost:8080</code>, catches the OAuth redirect, and writes <code>token.json</code>. Docker is the only requirement.</p>
         <div class="code-block">
           <button class="copy-btn" type="button">Copy</button>
           <pre>docker compose run --rm --service-ports auth</pre>
         </div>
-        <p style="margin-top:.75rem">Then copy the generated file to your server:</p>
+        <p style="color:var(--muted);font-size:.85rem;margin-top:.6rem">Open the printed URL in your browser, sign in, and authorise Janus. Done when you see "Authentication successful".</p>
+      </div>
+
+    </div>
+
+    <p style="font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-top:3rem;margin-bottom:.75rem;">Phase 2 — On the server</p>
+    <div class="setup-grid">
+
+      <div class="setup-card">
+        <div class="num">Step 04</div>
+        <h3>Install Docker on the server</h3>
+        <p>Docker Compose is included since Docker Engine v20.10 — no separate install needed.</p>
         <div class="code-block">
           <button class="copy-btn" type="button">Copy</button>
-          <pre>scp ~/janus/token.json user@server:~/janus/</pre>
+          <pre>curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker $USER
+<span class="c"># log out and back in, then verify:</span>
+docker compose version</pre>
         </div>
       </div>
 
       <div class="setup-card">
         <div class="num">Step 05</div>
-        <h3>Run the setup script</h3>
-        <p>It pulls the image, initialises the state files, and installs the crontab. After this, Janus runs on its own.</p>
+        <h3>Copy files from your laptop to the server</h3>
+        <p>You need three files on the server. <code>credentials.json</code> stays on your laptop — it is not needed on the server.</p>
         <div class="code-block">
           <button class="copy-btn" type="button">Copy</button>
-          <pre>chmod +x server-setup.sh
-./server-setup.sh</pre>
+          <pre>ssh user@server 'mkdir -p ~/janus'
+scp ~/janus/docker-compose.yml user@server:~/janus/
+scp ~/janus/.env               user@server:~/janus/
+scp ~/janus/token.json         user@server:~/janus/</pre>
         </div>
       </div>
+
+      <div class="setup-card">
+        <div class="num">Step 06</div>
+        <h3>Run the setup script</h3>
+        <p>Run these commands on the server. The script pulls the image, initialises state files, and installs the crontab. After this, Janus runs automatically.</p>
+        <div class="code-block">
+          <button class="copy-btn" type="button">Copy</button>
+          <pre>cd ~/janus
+curl -fsSLO https://raw.githubusercontent.com/esseti/janus/main/server-setup.sh
+chmod +x server-setup.sh &amp;&amp; ./server-setup.sh</pre>
+        </div>
+      </div>
+
     </div>
 
   </div>

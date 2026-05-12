@@ -8,13 +8,18 @@
 #
 # Quick bootstrap (no git clone needed):
 #   mkdir -p ~/janus && cd ~/janus
-#   curl -fsSLO https://raw.githubusercontent.com/esseti/janus/master/docker-compose.yml
-#   curl -fsSLO https://raw.githubusercontent.com/esseti/janus/master/.env.example
-#   curl -fsSLO https://raw.githubusercontent.com/esseti/janus/master/server-setup.sh
+#   curl -fsSLO https://raw.githubusercontent.com/esseti/janus/main/docker-compose.yml
+#   curl -fsSLO https://raw.githubusercontent.com/esseti/janus/main/.env.example
+#   curl -fsSLO https://raw.githubusercontent.com/esseti/janus/main/server-setup.sh
 #   mv .env.example .env       # then edit .env with your secrets
 #   # copy credentials.json + token.json into this folder, then run this script
 
 set -e
+
+if ! docker info &>/dev/null; then
+  echo "ERROR: Docker daemon is not running. Start it with: systemctl start docker"
+  exit 1
+fi
 
 DATA_DIR=$(pwd)
 LOG="$DATA_DIR/janus_cron.log"

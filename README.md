@@ -4,6 +4,22 @@ Janus monitors your Gmail, analyses every thread with an LLM (Gemini or Ollama),
 
 It's vibecoder.
 
+---
+
+## Quick start — I'm lazy
+
+If you have Docker, `ssh`, and `scp` on your laptop, one script does everything:
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/esseti/janus/main/setup.sh)
+```
+
+It walks you through the whole process interactively: downloads config files, opens Google Cloud Console so you can create OAuth credentials, asks for your API keys, runs the auth flow, then SSHs into your server, installs Docker if needed, and starts Janus automatically.
+
+> **That's it.** Skip the rest of this README unless something goes wrong.
+
+---
+
 ## How it works
 
 1. Polls Gmail for unread messages under a specific label (default: `janus`).
@@ -14,100 +30,115 @@ It's vibecoder.
 
 ---
 
-## Prerequisites
+## Setup overview
 
-| What                                                     | Where to get it                                              |
-| -------------------------------------------------------- | ------------------------------------------------------------ |
-| Google Cloud project with **Gmail API** enabled          | [console.cloud.google.com](https://console.cloud.google.com) |
-| OAuth 2.0 credentials (Desktop app) → `credentials.json` | Cloud Console > APIs & Services > Credentials                |
-| **Gemini API key**                                       | [aistudio.google.com](https://aistudio.google.com)           |
-| **Google Chat incoming webhook**                         | Chat space > Apps & integrations > Webhooks                  |
-| Docker + Docker Compose (on the server)                  | [docs.docker.com](https://docs.docker.com/engine/install/)   |
+Setup has two phases:
+
+- **On your laptop** — generate the OAuth token (requires a browser)
+- **On the server** — deploy and run Janus
 
 ---
 
-## Setup
+## Phase 1 — On your laptop
 
-You don't need to clone this repo. You just need a folder with the right files in it.
-
-### 1. Create a working folder and download the bootstrap files
+### 1. Get the bootstrap files
 
 ```bash
 mkdir -p ~/janus && cd ~/janus
 curl -fsSLO https://raw.githubusercontent.com/esseti/janus/main/docker-compose.yml
 curl -fsSLO https://raw.githubusercontent.com/esseti/janus/main/.env.example
-curl -fsSLO https://raw.githubusercontent.com/esseti/janus/main/server-setup.sh
 mv .env.example .env
-chmod +x server-setup.sh
 ```
 
-### 2. Fill in `.env`
+### 2. Create Google OAuth credentials
 
-Edit `.env`. At minimum:
+Janus needs OAuth 2.0 access to your Gmail:
 
-- `GEMINI_API_KEY`
-- `GOOGLE_CHAT_WEBHOOK`
-- `USER_EMAIL`
+1. Go to [Google Cloud Console](https://console.cloud.google.com) → **APIs & Services → Enabled APIs** → enable the **Gmail API**.
+2. Go to **Credentials → Create Credentials → OAuth client ID**.
+3. Set application type to **Desktop app**, give it a name, click **Create**.
+4. Click **Download JSON** and save it as `credentials.json` in `~/janus/`.
 
-### 3. Add `credentials.json`
+### 3. Fill in `.env`
 
-Janus uses OAuth 2.0 to access your Gmail. To generate the credentials file:
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com) → **APIs & Services → Enabled APIs** and enable the **Gmail API**.
-2. Go to **APIs & Services → Credentials → Create Credentials → OAuth client ID**.
-3. Set application type to **Desktop app**, give it a name, and click **Create**.
-4. Click **Download JSON** and save the file as `credentials.json`.
-
-Set its path in `.env`:
+Edit `~/janus/.env`. At minimum:
 
 ```bash
-CREDENTIALS_FILE=/path/to/your/credentials.json
+GEMINI_API_KEY=...
+GOOGLE_CHAT_WEBHOOK=...
+USER_EMAIL=you@example.com
 ```
 
-If you leave `CREDENTIALS_FILE` unset, Janus looks for `credentials.json` in the current folder.
+### 4. Generate `token.json`
 
-### 4. Generate `token.json` on your laptop
-
-The OAuth flow requires a browser, so **run this step on your laptop**, not on the server. No Python install needed — just Docker.
+This step requires a browser — run it on your laptop. Docker is the only requirement.
 
 ```bash
 docker compose run --rm --service-ports auth
 ```
 
-When the container prints a URL, open it in your browser, authorize with your Google account, and you'll be redirected to `http://localhost:8080`. The container catches the callback and writes `token.json` in the current folder.
+Open the URL printed in the terminal, sign in with your Google account, and authorise Janus. The container writes `token.json` in `~/janus/`.
 
-**Deploying to a remote server?** After generating `token.json` locally, copy it to the server:
+---
+
+## Phase 2 — On the server
+
+### 5. Install Docker and Docker Compose
 
 ```bash
-scp ~/janus/token.json user@server:~/janus/
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker $USER   # then log out and back in
 ```
 
-### 5. Run the setup script
+Docker Compose is included in Docker Engine since v20.10. Verify with:
 
 ```bash
+docker compose version
+```
+
+### 6. Create the Janus folder and copy files from your laptop
+
+```bash
+# run these on your laptop
+ssh user@server 'mkdir -p ~/janus'
+scp ~/janus/docker-compose.yml user@server:~/janus/
+scp ~/janus/.env               user@server:~/janus/
+scp ~/janus/token.json         user@server:~/janus/
+```
+
+> `credentials.json` does **not** need to be copied — it is only needed for the auth step.
+
+### 7. Download the setup script and run it
+
+```bash
+# run on the server
+cd ~/janus
+curl -fsSLO https://raw.githubusercontent.com/esseti/janus/main/server-setup.sh
+chmod +x server-setup.sh
 ./server-setup.sh
 ```
 
-It pulls the image, initialises the state files, and installs the crontab.
+The script pulls the Docker image, initialises state files, and installs the crontab. Janus will now run automatically on schedule.
 
-### 6. (Optional) Configure sender filters
+### 8. (Optional) Configure sender filters
 
-Drop these files into the same folder if you want extra control:
+Drop these files into `~/janus/` on the server:
 
-- **`excluded_senders.txt`** — patterns of senders to skip (newsletters, bots). One pattern per line, supports `*` globs.
-- **`keep_senders.txt`** — senders that should never be skipped, even if they match an exclusion pattern.
+- **`excluded_senders.txt`** — senders to skip (newsletters, bots). One glob pattern per line.
+- **`keep_senders.txt`** — senders that are never skipped even if they match an exclusion.
 - **`evaluation_rules.txt`** — extra rules passed to the LLM to guide classification.
 
-### Updates
+---
 
-Push to `main` → GitHub Actions builds and pushes a new image to GHCR.  
-The server's crontab already runs `docker compose pull` every night at 04:00, so it picks up new images automatically.
-
-### Logs
+## Logs
 
 ```bash
-ssh user@server 'tail -f /home/user/janus/janus_cron.log'
+ssh user@server 'tail -f ~/janus/janus_cron.log'
 ```
+
+## Updates
+
+The server's crontab runs `docker compose pull` every night at 04:00, so new images are picked up automatically.
 
 ---
 
@@ -121,15 +152,6 @@ uv run python -m src.main          # process emails
 uv run python -m src.report        # send digest report
 uv run python -m src.preview       # preview notifications without sending
 ```
-
----
-
-## Making the Docker image public
-
-After the first GitHub Actions run, go to:  
-**GitHub → your profile → Packages → janus → Package settings → Change visibility → Public**
-
-This lets others pull the image without authentication.
 
 ---
 
