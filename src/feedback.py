@@ -160,6 +160,59 @@ def _save_feedback(
         _add_sender_to_excluded(sender_email)
 
 
+def collect_label_feedback(gmail) -> int:
+    """Read feedback labels from Gmail and save entries to feedback.json.
+
+    Looks for threads labeled janus/urgent or janus/not-urgent, saves a
+    feedback entry for each one (matching against the processed log for the
+    original urgency/classification), then removes the feedback label.
+
+    Args:
+        gmail: An authenticated GmailClient instance.
+
+    Returns:
+        Number of feedback entries collected.
+    """
+    labeled = gmail.get_feedback_labeled_threads()
+    if not labeled:
+        return 0
+
+    processed = _load_processed_log()
+    processed_by_thread = {m.get("thread_id"): m for m in processed}
+
+    count = 0
+    for item in labeled:
+        thread_id = item["thread_id"]
+        feedback_type = item["feedback_type"]
+        label_id = item["label_id"]
+        subject = item["subject"]
+        from_addr = item["from_addr"]
+
+        original = processed_by_thread.get(thread_id)
+        original_urgency = original.get("urgency", 0) if original else 0
+        original_classification = original.get("classification", "N/A") if original else "N/A"
+
+        correct_urgency = 5 if feedback_type == "urgent" else 1
+
+        _save_feedback(
+            thread_id=thread_id,
+            subject=subject,
+            original_urgency=original_urgency,
+            correct_urgency=correct_urgency,
+            original_classification=original_classification,
+            correct_classification=original_classification,
+            notes=f"label-feedback:{feedback_type}",
+            add_to_excluded=False,
+            sender_email=from_addr,
+        )
+        gmail.remove_label_from_thread(thread_id, label_id)
+        direction = "↑ urgent" if feedback_type == "urgent" else "↓ not-urgent"
+        print(f"  📝 Feedback [{direction}]: {subject[:50]}")
+        count += 1
+
+    return count
+
+
 def provide_feedback() -> None:
     """Interactive command to provide feedback on processed emails."""
     print("📝 Email Feedback System\n")

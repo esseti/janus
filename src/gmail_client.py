@@ -672,6 +672,81 @@ class GmailClient:
             print(f"An error occurred creating draft: {error}")
             return False
 
+    def get_feedback_labeled_threads(self) -> list[dict]:
+        """Return threads the user has labeled with janus/urgent or janus/not-urgent.
+
+        Returns:
+            List of dicts with keys: thread_id, feedback_type ('urgent'|'not-urgent'),
+            subject, from_addr.
+        """
+        results = []
+        for label_name, feedback_type in [
+            ("janus/urgent", "urgent"),
+            ("janus/not-urgent", "not-urgent"),
+        ]:
+            try:
+                label_id = self._get_or_create_label(label_name)
+                response = (
+                    self.service.users()
+                    .threads()
+                    .list(userId="me", labelIds=[label_id])
+                    .execute()
+                )
+                for thread in response.get("threads", []):
+                    thread_id = thread["id"]
+                    try:
+                        details = (
+                            self.service.users()
+                            .threads()
+                            .get(
+                                userId="me",
+                                id=thread_id,
+                                format="metadata",
+                                metadataHeaders=["Subject", "From"],
+                            )
+                            .execute()
+                        )
+                        first_msg = details["messages"][0]
+                        headers = first_msg.get("payload", {}).get("headers", [])
+                        subject = next(
+                            (h["value"] for h in headers if h["name"].lower() == "subject"),
+                            "N/A",
+                        )
+                        from_addr = next(
+                            (h["value"] for h in headers if h["name"].lower() == "from"),
+                            "N/A",
+                        )
+                        results.append(
+                            {
+                                "thread_id": thread_id,
+                                "feedback_type": feedback_type,
+                                "label_id": label_id,
+                                "subject": subject,
+                                "from_addr": from_addr,
+                            }
+                        )
+                    except HttpError:
+                        pass
+            except HttpError as e:
+                print(f"⚠️ Errore lettura label {label_name}: {e}")
+        return results
+
+    def remove_label_from_thread(self, thread_id: str, label_id: str) -> None:
+        """Remove a label from all messages in a thread.
+
+        Args:
+            thread_id: The thread ID.
+            label_id: The label ID to remove.
+        """
+        try:
+            self.service.users().threads().modify(
+                userId="me",
+                id=thread_id,
+                body={"removeLabelIds": [label_id]},
+            ).execute()
+        except HttpError as e:
+            print(f"⚠️ Errore rimozione label da thread {thread_id[:8]}...: {e}")
+
     def mark_as_read(self, thread_id: str, target_label: str) -> bool:
         """Mark thread as read and add target label.
 

@@ -5,6 +5,7 @@ import sys
 from datetime import datetime
 
 from .config import Config
+from .feedback import collect_label_feedback
 from .gmail_client import GmailClient
 from .llm_processor import LLMProcessor
 from .notifier import Notifier
@@ -124,6 +125,11 @@ def run_janus() -> None:
     gmail = GmailClient()
     llm = LLMProcessor()
     notifier = Notifier()
+
+    # Collect any Gmail-label feedback before processing new mail
+    n_feedback = collect_label_feedback(gmail)
+    if n_feedback:
+        print(f"📝 Raccolti {n_feedback} feedback da label Gmail")
 
     # Get unread messages since last run
     messages = gmail.get_unread_messages_since_last_run(Config.TARGET_LABEL)

@@ -128,6 +128,19 @@ Drop these files into `~/janus/` on the server:
 - **`keep_senders.txt`** — senders that are never skipped even if they match an exclusion.
 - **`evaluation_rules.txt`** — extra rules passed to the LLM to guide classification.
 
+### 9. (Optional) Give feedback via Gmail labels
+
+If Janus scores an email wrong, you can correct it directly from Gmail — no CLI needed.
+
+Apply one of these labels to the email in Gmail:
+
+| Label | Meaning |
+|---|---|
+| `janus/urgent` | This email should have been flagged as urgent |
+| `janus/not-urgent` | This email should not have been flagged |
+
+On the next run, Janus reads both labels, saves a feedback entry to `feedback.json`, and removes the label from the thread. Over time, run `uv run python -m src.feedback --analyze` to turn the accumulated feedback into updated evaluation rules.
+
 ---
 
 ## Logs

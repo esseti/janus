@@ -242,6 +242,26 @@
     .copy-btn.copied { color: var(--green); border-color: var(--green); }
     pre .c { color: var(--muted); }
 
+    /* ── CHANGELOG ── */
+    #changelog { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .version-badge {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: rgba(52,211,153,.1); border: 1px solid rgba(52,211,153,.3);
+      color: var(--green); font-size: .78rem; font-weight: 700;
+      letter-spacing: .06em; text-transform: uppercase;
+      padding: .3rem .9rem; border-radius: 999px; margin-bottom: 1rem;
+    }
+    .cl-wrap { margin-top: 2.5rem; max-width: 720px; }
+    .cl-wrap h1,
+    .cl-wrap h2 { font-size: 1.15rem; font-weight: 700; margin: 1.75rem 0 .6rem; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: .4rem; }
+    .cl-wrap h3 { font-size: .95rem; font-weight: 700; margin: 1.1rem 0 .4rem; color: var(--accent2); }
+    .cl-wrap ul { padding-left: 1.4rem; }
+    .cl-wrap li { color: var(--muted); font-size: .9rem; line-height: 1.75; }
+    .cl-wrap p { color: var(--muted); font-size: .9rem; margin-top: .5rem; }
+    .cl-more { margin-top: 1.5rem !important; }
+    .cl-more a { color: var(--accent2); text-decoration: none; font-weight: 600; }
+    .cl-more a:hover { text-decoration: underline; }
+
     /* ── FOOTER ── */
     footer {
       border-top: 1px solid var(--border);
@@ -275,6 +295,7 @@
     <a href="#features">Features</a>
     <a href="#how">How it works</a>
     <a href="#setup">Setup</a>
+    <a href="#changelog">Changelog</a>
   </div>
   <a class="nav-cta" href="https://github.com/esseti/janus" target="_blank">View on GitHub</a>
 </nav>
@@ -282,6 +303,7 @@
 <!-- HERO -->
 <section class="hero">
   <div class="badge"><span></span> Gmail AI Triage · Powered by Gemini · LangChain</div>
+  <div class="version-badge">v {{VERSION}} — {{RELEASE_DATE}}</div>
   <h1>Your Gmail,<br><em>intelligently</em> managed</h1>
   <p class="hero-sub">
     Janus is a self-hosted Gmail triage assistant. It monitors your Gmail inbox, analyses every thread with an LLM, and surfaces only what truly needs your attention — the rest is handled automatically.
@@ -349,6 +371,12 @@
         <p>Janus is a Docker container that you deploy on your own server. Your emails never leave your Google account — only metadata and content summaries hit the LLM API.</p>
       </div>
 
+      <div class="feature-card">
+        <div class="feature-icon">🏷️</div>
+        <h3>Feedback via Gmail labels</h3>
+        <p>Disagree with a score? Apply <code>janus/urgent</code> or <code>janus/not-urgent</code> to any email in Gmail. Janus picks it up on the next run, records the correction, and clears the label — no CLI needed.</p>
+      </div>
+
     </div>
   </div>
 </section>
@@ -393,6 +421,13 @@
         <div>
           <h3>Save state and repeat</h3>
           <p>Processed thread IDs and timestamps are persisted locally so the next run only fetches what's truly new. A digest report is also sent at 8:30, 11:30, 15:30, and 17:30 on weekdays.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div>
+          <h3>Correct scores with Gmail labels</h3>
+          <p>If an email was scored wrong, apply <code>janus/urgent</code> or <code>janus/not-urgent</code> directly in Gmail. On the next run Janus reads the label, records the correction in <code>feedback.json</code>, and removes the label — no CLI or separate interface required.</p>
         </div>
       </div>
     </div>
@@ -556,6 +591,18 @@ chmod +x server-setup.sh &amp;&amp; ./server-setup.sh</pre>
 
     </div>
 
+  </div>
+</section>
+
+<!-- CHANGELOG -->
+<section id="changelog">
+  <div class="container">
+    <p class="section-label">What's new</p>
+    <h2 class="section-title">Changelog</h2>
+    <p class="section-sub">Recent changes across releases.</p>
+    <div class="cl-wrap">
+      {{CHANGELOG_HTML}}
+    </div>
   </div>
 </section>
 
