@@ -123,6 +123,13 @@ class LLMProcessor:
             "service notifications, mass mailings, newsletters."
             "\n- If marked as mailing list, the sender will be automatically "
             "excluded from future processing."
+            "\n\nIMPORTANT calendar/invite rules:"
+            "\n- Email di accettazione invito (Accepted, ha accettato, will attend, etc.): urgenza 1"
+            "\n- Email di declino invito (Declined, ha rifiutato, won't attend, etc.): urgenza 1"
+            "\n- Aggiornamenti generici di calendario (reminder, invite forwarded, etc.): urgenza 1"
+            "\n- Cancellazione di un meeting: urgenza 4"
+            "\n- Riprogrammazione (reschedule) di un meeting che avviene nelle prossime 6 ore: urgenza 4"
+            "\n- Riprogrammazione di un meeting lontano nel tempo: urgenza 1"
             "\n\nBe concise and professional."
         )
 
@@ -209,6 +216,13 @@ class LLMProcessor:
             "service notifications, mass mailings, newsletters."
             "\n- If marked as mailing list, the sender will be automatically "
             "excluded from future processing."
+            "\n\nIMPORTANT calendar/invite rules:"
+            "\n- Email di accettazione invito (Accepted, ha accettato, will attend, etc.): urgenza 1"
+            "\n- Email di declino invito (Declined, ha rifiutato, won't attend, etc.): urgenza 1"
+            "\n- Aggiornamenti generici di calendario (reminder, invite forwarded, etc.): urgenza 1"
+            "\n- Cancellazione di un meeting: urgenza 4"
+            "\n- Riprogrammazione (reschedule) di un meeting che avviene nelle prossime 6 ore: urgenza 4"
+            "\n- Riprogrammazione di un meeting lontano nel tempo: urgenza 1"
             "\n\nBe concise and professional."
         )
 
