@@ -33,9 +33,11 @@ jobs:
           git cliff --output changelog.md
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout main
+          git pull origin main
           git add changelog.md
           git commit -m "chore: update changelog for ${{ github.ref_name }}" || true
-          git push origin HEAD:main
+          git push origin main
 
       - uses: softprops/action-gh-release@v2
         with:
