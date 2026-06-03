@@ -6,6 +6,7 @@ from __future__ import annotations
 import csv
 import json
 import os
+import zoneinfo
 from datetime import datetime
 from pathlib import Path
 
@@ -124,8 +125,9 @@ def _save_feedback(
         add_to_excluded: If True, add sender to excluded_senders.txt.
         sender_email: The sender email address (required if add_to_excluded is True).
     """
+    tz = zoneinfo.ZoneInfo(Config.TIMEZONE)
     feedback_entry = {
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(tz).isoformat(),
         "thread_id": thread_id,
         "subject": subject,
         "original_urgency": original_urgency,

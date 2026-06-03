@@ -15,7 +15,7 @@ fi
 CRON_ENTRY_MAIN_WEEKDAY="*/5 8-18 * * 1-5 cd $PROJECT_DIR && $UV_EXE run python -m src.main >> $LOG_FILE 2>&1"
 CRON_ENTRY_MAIN_WEEKEND="*/30 9-18 * * 0,6 cd $PROJECT_DIR && $UV_EXE run python -m src.main >> $LOG_FILE 2>&1"
 CRON_ENTRY_REPORT="30 8,11,15,17 * * 1-5 cd $PROJECT_DIR && $UV_EXE run python -m src.report >> $LOG_FILE 2>&1"
-CRON_ENTRY_MAILING_LIST="45 11,17 * * 1-5 cd $PROJECT_DIR && $UV_EXE run python -m src.report_mailing_list >> $LOG_FILE 2>&1"
+CRON_ENTRY_MAILING_LIST="45 9,13,17 * * 1-5 cd $PROJECT_DIR && $UV_EXE run python -m src.report_mailing_list >> $LOG_FILE 2>&1"
 
 echo "📝 Configuring Janus crontab"
 echo "=================================="
@@ -31,7 +31,7 @@ echo ""
 echo "# Janus - digest report at 8:30, 11:30, 15:30, 17:30 (Mon-Fri)"
 echo "$CRON_ENTRY_REPORT"
 echo ""
-echo "# Janus - mailing list report at 11:45 and 17:45 (Mon-Fri)"
+echo "# Janus - mailing list report at 9:45, 13:45, 17:45 (Mon-Fri)"
 echo "$CRON_ENTRY_MAILING_LIST"
 echo ""
 
@@ -51,7 +51,7 @@ crontab -l 2>/dev/null | grep -v -i "# Janus" | grep -v "/janus" > "$TEMP_CRON" 
     echo "$CRON_ENTRY_MAIN_WEEKEND"
     echo "# Janus - digest report at 8:30, 11:30, 15:30, 17:30 (Mon-Fri)"
     echo "$CRON_ENTRY_REPORT"
-    echo "# Janus - mailing list report at 11:45 and 17:45 (Mon-Fri)"
+    echo "# Janus - mailing list report at 9:45, 13:45, 17:45 (Mon-Fri)"
     echo "$CRON_ENTRY_MAILING_LIST"
 } | crontab -
 

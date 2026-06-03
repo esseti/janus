@@ -4,6 +4,8 @@ import json
 import sys
 from datetime import datetime
 
+import zoneinfo
+
 from .config import Config
 from .feedback import collect_label_feedback
 from .gmail_client import GmailClient
@@ -35,8 +37,9 @@ def _log_processed_message(
     """
     import os
 
+    tz = zoneinfo.ZoneInfo(Config.TIMEZONE)
     log_entry = {
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(tz).isoformat(),
         "thread_id": thread_id,
         "subject": subject,
         "from": from_addr,
@@ -80,8 +83,9 @@ def _log_mailing_list_message(
     """
     import os
 
+    tz = zoneinfo.ZoneInfo(Config.TIMEZONE)
     log_entry = {
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(tz).isoformat(),
         "thread_id": thread_id,
         "subject": subject,
         "from": from_addr,

@@ -35,6 +35,7 @@ class Config:
     MAILING_LIST_LOG_FILE = DATA_DIR / "mailing_list.json"
     EXCLUDED_SENDERS_FILE = DATA_DIR / "excluded_senders.txt"
     KEEP_SENDERS_FILE = DATA_DIR / "keep_senders.txt"
+    TIMEZONE = os.getenv("TIMEZONE", "Europe/Rome")
 
     @classmethod
     def validate(cls) -> None:
