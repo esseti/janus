@@ -230,7 +230,15 @@ class LLMProcessor:
         chain = prompt | self.llm
         try:
             result = chain.invoke({"emails": emails_block})
-            return getattr(result, "content", str(result)).strip()
+            content = getattr(result, "content", result)
+            # Some providers (e.g. Gemini) return content as a list of blocks.
+            if isinstance(content, list):
+                parts = [
+                    p if isinstance(p, str) else p.get("text", "")
+                    for p in content
+                ]
+                content = "".join(parts)
+            return str(content).strip()
         except Exception as e:
             print(f"❌ Errore sintesi tematica LLM: {e}")
             return ""
