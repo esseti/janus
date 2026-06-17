@@ -180,6 +180,69 @@ class LLMProcessor:
                 (tid, self.analyze_thread(content)) for tid, content in thread_contents
             ]
 
+    def summarize_period(self, held: List[dict]) -> str:
+        """Produce a thematic summary of important emails held during OOO.
+
+        Makes a single LLM call that groups the held notifications by theme and
+        returns concise Italian bullet points.
+
+        Args:
+            held: List of held notification dicts (subject, from, urgency,
+                summary, latest_message_summary, classification).
+
+        Returns:
+            Thematic summary text in Italian, or "" if there is nothing to
+            summarize or the call fails.
+        """
+        if not held:
+            return ""
+
+        lines = []
+        for i, n in enumerate(held, 1):
+            lines.append(
+                f"{i}. [{n.get('classification', 'N/A')}] "
+                f"urgenza {n.get('urgency', '?')}/5 — "
+                f"Oggetto: {n.get('subject', 'N/A')} | Da: {n.get('from', 'N/A')}\n"
+                f"   Sintesi: {n.get('summary') or n.get('latest_message_summary') or 'N/A'}"
+            )
+        emails_block = "\n".join(lines)
+
+        system_prompt = (
+            "Sei l'assistente esecutivo di Stefano. Stefano è appena rientrato da "
+            "un periodo di assenza. Hai un elenco di email importanti ricevute "
+            "durante l'assenza. Produci una SINTESI TEMATICA in italiano: "
+            "raggruppa le email per tema/argomento e per ciascun tema scrivi un "
+            "bullet conciso che dica cosa è successo e cosa eventualmente richiede "
+            "attenzione. Metti per primi i temi più urgenti. Sii sintetico e "
+            "concreto, niente preamboli. Usa bullet con '- '."
+        )
+
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", system_prompt),
+                (
+                    "human",
+                    "Email importanti ricevute durante l'assenza:\n\n{emails}",
+                ),
+            ]
+        )
+
+        chain = prompt | self.llm
+        try:
+            result = chain.invoke({"emails": emails_block})
+            content = getattr(result, "content", result)
+            # Some providers (e.g. Gemini) return content as a list of blocks.
+            if isinstance(content, list):
+                parts = [
+                    p if isinstance(p, str) else p.get("text", "")
+                    for p in content
+                ]
+                content = "".join(parts)
+            return str(content).strip()
+        except Exception as e:
+            print(f"❌ Errore sintesi tematica LLM: {e}")
+            return ""
+
     def analyze_thread(self, thread_content: str) -> EmailAnalysis | None:
         """Analyze email thread and return structured classification.
 

@@ -1,0 +1,20 @@
+📅 {{ generated_at }} ({{ timezone }})
+🏖️ Recap out-of-office — periodo {{ period_start }} → {{ period_end }}
+
+Bentornato! Durante la tua assenza sono arrivate {{ important|length }} email importanti{% if non_urgent_count %} e {{ non_urgent_count }} messaggi non urgenti{% endif %}.
+
+{% if thematic_summary %}
+== Sintesi tematica ==
+{{ thematic_summary }}
+{% endif %}
+
+== Importanti (dettaglio) ==
+{% for n in important %}
+{{ loop.index }}. [{{ n.urgency }}/5] {{ n.subject }} | Da: {{ n.from }}
+   {{ n.summary or n.latest_message_summary or n.analysis or '' }}
+   🔗 https://mail.google.com/mail/u/0/#inbox/{{ n.thread_id }}
+{% endfor %}
+{% if non_urgent_count %}
+== Non urgenti ==
+{{ non_urgent_count }} messaggi a bassa priorità sono stati processati e archiviati durante l'assenza.
+{% endif %}
