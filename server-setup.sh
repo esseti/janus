@@ -55,10 +55,12 @@ RUN="cd $DATA_DIR && docker compose run --rm janus"
 */5 8-18 * * 1-5 $RUN >> $LOG 2>&1
 # Janus - process emails every 30 min, weekends 9-18
 */30 9-18 * * 0,6 $RUN >> $LOG 2>&1
-# Janus - digest report Mon-Fri at 8:30, 11:30, 15:30, 17:30
-30 8,11,15,17 * * 1-5 $RUN python -m src.report >> $LOG 2>&1
+# Janus - digest report Mon-Fri every 30 min 9-18
+*/30 9-18 * * 1-5 $RUN python -m src.report >> $LOG 2>&1
 # Janus - mailing list report Mon-Fri at 9:45, 13:45, 17:45
 45 9,13,17 * * 1-5 $RUN python -m src.report_mailing_list >> $LOG 2>&1
+# Janus - out-of-office recap daily at 8am
+0 8 * * * $RUN python -m src.recap >> $LOG 2>&1
 # Janus - pull latest image daily at 4am
 0 4 * * * cd $DATA_DIR && docker compose pull >> $LOG 2>&1
 EOF

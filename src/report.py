@@ -7,6 +7,7 @@ import sys
 
 from .config import Config
 from .notifier import Notifier
+from .ooo_state import is_ooo_active
 
 
 def send_report(clear: bool = False) -> None:
@@ -16,6 +17,10 @@ def send_report(clear: bool = False) -> None:
         clear: If True, clear the log file after sending report.
     """
     print("📋 Invio report messaggi processati...")
+
+    if is_ooo_active():
+        print("🏖️  Out-of-office attivo: report sospeso (recap al rientro)")
+        return
 
     try:
         Config.validate()

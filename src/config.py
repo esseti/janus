@@ -35,6 +35,8 @@ class Config:
     MAILING_LIST_LOG_FILE = DATA_DIR / "mailing_list.json"
     EXCLUDED_SENDERS_FILE = DATA_DIR / "excluded_senders.txt"
     KEEP_SENDERS_FILE = DATA_DIR / "keep_senders.txt"
+    OOO_FILE = DATA_DIR / "out_of_office.json"
+    OOO_HELD_FILE = DATA_DIR / "out_of_office_held.json"
     TIMEZONE = os.getenv("TIMEZONE", "Europe/Rome")
 
     @classmethod

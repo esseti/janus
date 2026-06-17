@@ -11,6 +11,7 @@ from .feedback import collect_label_feedback
 from .gmail_client import GmailClient
 from .llm_processor import LLMProcessor
 from .notifier import Notifier
+from .ooo_state import append_held, is_ooo_active
 
 
 def _log_processed_message(
@@ -332,13 +333,20 @@ def run_janus() -> None:
 
             processed_count += 1
 
-    # Send consolidated notification report
+    # Send consolidated notification report (held during out-of-office)
     if notifications_to_send:
         print(f"\n{'=' * 60}")
-        print(
-            f"📤 Invio report riepilogativo ({len(notifications_to_send)} email urgenti)..."
-        )
-        notifier.send_consolidated_report(notifications_to_send)
+        if is_ooo_active():
+            print(
+                f"🏖️  Out-of-office attivo: {len(notifications_to_send)} email urgenti "
+                "trattenute (recap al rientro)"
+            )
+            append_held(notifications_to_send)
+        else:
+            print(
+                f"📤 Invio report riepilogativo ({len(notifications_to_send)} email urgenti)..."
+            )
+            notifier.send_consolidated_report(notifications_to_send)
 
     # Save timestamp for next run
     gmail._save_last_run_timestamp()
