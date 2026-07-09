@@ -306,6 +306,7 @@ def run_janus() -> None:
                         "latest_message_summary": latest_message_summary,
                         "needs_reply": needs_reply,
                         "draft_body": draft_body,
+                        "user_replied": details.get("user_replied", False),
                     }
                 )
                 notified_count += 1
@@ -337,11 +338,23 @@ def run_janus() -> None:
     if notifications_to_send:
         print(f"\n{'=' * 60}")
         if is_ooo_active():
-            print(
-                f"🏖️  Out-of-office attivo: {len(notifications_to_send)} email urgenti "
-                "trattenute (recap al rientro)"
-            )
-            append_held(notifications_to_send)
+            # Thread già interrotti con una risposta dell'utente restano
+            # prioritari: notificati subito anche in OOO, non trattenuti.
+            replied = [n for n in notifications_to_send if n.get("user_replied")]
+            to_hold = [n for n in notifications_to_send if not n.get("user_replied")]
+
+            if to_hold:
+                print(
+                    f"🏖️  Out-of-office attivo: {len(to_hold)} email urgenti "
+                    "trattenute (recap al rientro)"
+                )
+                append_held(to_hold)
+            if replied:
+                print(
+                    f"⚡ {len(replied)} email su thread con risposta utente: "
+                    "notifica immediata nonostante OOO"
+                )
+                notifier.send_consolidated_report(replied)
         else:
             print(
                 f"📤 Invio report riepilogativo ({len(notifications_to_send)} email urgenti)..."

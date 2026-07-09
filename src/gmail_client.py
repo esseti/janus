@@ -564,8 +564,11 @@ class GmailClient:
             subject = ""
             from_addr = ""
             all_recipients = set()
+            user_replied = False
 
             for msg in thread.get("messages", []):
+                if "SENT" in msg.get("labelIds", []):
+                    user_replied = True
                 headers = msg.get("payload", {}).get("headers", [])
                 msg_from = next(
                     (h["value"] for h in headers if h["name"] == "From"), "Unknown"
@@ -605,6 +608,7 @@ class GmailClient:
                 "last_message_id": last_message_id,
                 "from": from_addr,
                 "to": to_addr,
+                "user_replied": user_replied,
             }
         except HttpError as error:
             print(f"An error occurred: {error}")
