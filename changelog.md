@@ -1,6 +1,28 @@
 # Changelog
 
 All notable changes to Janus are documented here.
+## [1.3.0] — 2026-07-09
+
+### Bug Fixes
+
+- Checkout main before pushing changelog in release workflow
+- Handle list-shaped LLM content in summarize_period
+
+### Features
+
+- Out-of-office period with held notifications and email recap
+
+### Build
+
+- Regenerate uv.lock (was deleted in 27a05bb, breaking docker build)
+
+## [1.2.0] — 2026-05-14
+
+### Bug Fixes
+
+- Fixing prompt for events
+
+
 ## [1.1.0] — 2026-05-13
 
 ### Bug Fixes
