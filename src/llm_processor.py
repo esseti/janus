@@ -17,7 +17,9 @@ class EmailAnalysis(BaseModel):
         description="The category of the email thread "
         "(e.g., Urgent, Support, Information, Inquiry)"
     )
-    urgency: int = Field(description="Urgency level from 1 (low) to 5 (high)")
+    urgency: int = Field(
+        description="Urgency level from 1 (low) to 5 (high). Indipendently if it's targeted to Stefano or not, if it's potentially interesting or actionable for business, and the sender is one of the people @chino.io, increase the urgency > 3, even if it doesn't require a reply, to make sure Stefano sees it."
+    )
     analysis: str = Field(
         description="Brief justification for the classification and importance. In italian, ALWAYS"
     )
@@ -26,13 +28,13 @@ class EmailAnalysis(BaseModel):
     )
     latest_message_summary: str = Field(
         description="Summary focused specifically on the LATEST/NEW message in the thread. "
-        "State who sent it (name and email) and what they said or asked. "
+        "State who sent it (name and email) and what they said or asked. State clearly who is accountable for the action if any. If not clear, staste that it's not clear who is accountable."
         "If the thread has only one message, summarize that one. In italian, ALWAYS."
     )
     needs_reply: bool = Field(
         description="Whether a reply draft is suggested. IMPORTANT: Set to True "
         "ONLY if the email explicitly requires an action or response from Stefano "
-        "personally (not from stefano@chino.io or the company). Check the last "
+        "personally (so that the email is sent SPECIFICALLY to stefano@chino.io or Stefano is mentioned in the text). Check the last "
         "message content and context to determine if Stefano needs to take action."
     )
     draft_body: Optional[str] = Field(
@@ -44,7 +46,7 @@ class EmailAnalysis(BaseModel):
         description="Whether this email is clearly from a mailing list, newsletter, "
         "or automated bulk sender (e.g., marketing emails, promotional content, "
         "automated notifications from services). Set to True ONLY if it's clearly "
-        "a mass mailing that should be excluded from future processing.",
+        "a mass mailing that should be excluded from future processing. If there's in the thread any message that is clearly from a person in @chino.io stating things to be done, avoid marking it as mailing list. And if already marked, remove the flag. If the email is a newsletter or marketing email, set to True.  ",
     )
 
 
@@ -54,6 +56,46 @@ class BatchEmailAnalysis(BaseModel):
     analyses: List[EmailAnalysis] = Field(
         description="List of email analyses, one for each email in the batch"
     )
+
+
+DEFAUL_SYSTEM_PROMPT = (
+    "You are an expert executive assistant for Stefano. "
+    "Analyze each email thread to determine its classification, "
+    "urgency, and if it requires a reply draft. "
+    "\n\nIMPORTANT for summary and latest_message_summary:"
+    "\n- summary: brief overview of the full thread context."
+    "\n- latest_message_summary: focus ONLY on the last message separated by '---'. "
+    "State who sent it (full name and email address) and what they said/asked. "
+    "This is the most important field — be specific."
+    "\n\nIMPORTANT for needs_reply and draft_body:"
+    "\n- Set needs_reply=True ONLY if the email explicitly requires "
+    "an action or response from Stefano PERSONALLY."
+    "\n- If the email is potentially intersting or actionable for business,"
+    " and the sender is one of the people @chino.io, increase the urgency > 3,"
+    "even if it doesn't require a reply, to make sure Stefano sees it. "
+    "\n- Check the last message content and context carefully."
+    "\n- If the email is NOT addressed to stefano@chino.io, "
+    "it likely does NOT need a personal reply from Stefano. Check if stefano@chino.io is in the to or cc and or if Stefano is mentioned in the text. If not, set needs_reply=False."
+    "\n- If the email is informational, automated, or a newsletter, "
+    "set needs_reply=False."
+    "\n- Only create a draft if Stefano needs to take personal action."
+    "\n- State who is accountable for the action if any. If not clear, staste that it's not clear who is accountable."
+    "\n\nIMPORTANT for is_mailing_list:"
+    "\n- Set is_mailing_list=True if the email is clearly a mailing list, "
+    "newsletter, marketing email, or automated bulk sender."
+    "\n- Examples: promotional emails, marketing campaigns, automated "
+    "service notifications, mass mailings, newsletters."
+    "\n- If marked as mailing list, the sender will be automatically "
+    "excluded from future processing."
+    "\n\nIMPORTANT calendar/invite rules:"
+    "\n- Email di accettazione invito (Accepted, ha accettato, will attend, etc.): urgenza 1"
+    "\n- Email di declino invito (Declined, ha rifiutato, won't attend, etc.): urgenza 1"
+    "\n- Aggiornamenti generici di calendario (reminder, invite forwarded, etc.): urgenza 1"
+    "\n- Cancellazione di un meeting: urgenza 4"
+    "\n- Riprogrammazione (reschedule) di un meeting che avviene nelle prossime 6 ore: urgenza 4"
+    "\n- Riprogrammazione di un meeting lontano nel tempo: urgenza 1"
+    "\n\nBe concise and professional."
+)
 
 
 class LLMProcessor:
@@ -95,43 +137,7 @@ class LLMProcessor:
             return []
 
         # Build system prompt with custom rules if available
-        system_prompt = (
-            "You are an expert executive assistant for Stefano. "
-            "Analyze each email thread to determine its classification, "
-            "urgency, and if it requires a reply draft. "
-            "\n\nIMPORTANT for summary and latest_message_summary:"
-            "\n- summary: brief overview of the full thread context."
-            "\n- latest_message_summary: focus ONLY on the last message separated by '---'. "
-            "State who sent it (full name and email address) and what they said/asked. "
-            "This is the most important field — be specific."
-            "\n\nIMPORTANT for needs_reply and draft_body:"
-            "\n- Set needs_reply=True ONLY if the email explicitly requires "
-            "an action or response from Stefano PERSONALLY."
-            "\n- If the email is potentially intersting or actionable for business,"
-            " and the sender is one of the people @chino.io, increase the urgency > 3,"
-            "even if it doesn't require a reply, to make sure Stefano sees it. "
-            "\n- Check the last message content and context carefully."
-            "\n- If the email is addressed to stefano@chino.io or the company, "
-            "it likely does NOT need a personal reply from Stefano."
-            "\n- If the email is informational, automated, or a newsletter, "
-            "set needs_reply=False."
-            "\n- Only create a draft if Stefano needs to take personal action."
-            "\n\nIMPORTANT for is_mailing_list:"
-            "\n- Set is_mailing_list=True if the email is clearly a mailing list, "
-            "newsletter, marketing email, or automated bulk sender."
-            "\n- Examples: promotional emails, marketing campaigns, automated "
-            "service notifications, mass mailings, newsletters."
-            "\n- If marked as mailing list, the sender will be automatically "
-            "excluded from future processing."
-            "\n\nIMPORTANT calendar/invite rules:"
-            "\n- Email di accettazione invito (Accepted, ha accettato, will attend, etc.): urgenza 1"
-            "\n- Email di declino invito (Declined, ha rifiutato, won't attend, etc.): urgenza 1"
-            "\n- Aggiornamenti generici di calendario (reminder, invite forwarded, etc.): urgenza 1"
-            "\n- Cancellazione di un meeting: urgenza 4"
-            "\n- Riprogrammazione (reschedule) di un meeting che avviene nelle prossime 6 ore: urgenza 4"
-            "\n- Riprogrammazione di un meeting lontano nel tempo: urgenza 1"
-            "\n\nBe concise and professional."
-        )
+        system_prompt = DEFAUL_SYSTEM_PROMPT
 
         if self.custom_rules:
             system_prompt += (
@@ -234,8 +240,7 @@ class LLMProcessor:
             # Some providers (e.g. Gemini) return content as a list of blocks.
             if isinstance(content, list):
                 parts = [
-                    p if isinstance(p, str) else p.get("text", "")
-                    for p in content
+                    p if isinstance(p, str) else p.get("text", "") for p in content
                 ]
                 content = "".join(parts)
             return str(content).strip()
@@ -254,41 +259,7 @@ class LLMProcessor:
             or None if analysis fails.
         """
         # Build system prompt with custom rules if available
-        system_prompt = (
-            "You are an expert executive assistant for Stefano. "
-            "Analyze the email thread to determine its classification, "
-            "urgency, and if it requires a reply draft. "
-            "\n\nIMPORTANT for summary and latest_message_summary:"
-            "\n- summary: brief overview of the full thread context."
-            "\n- latest_message_summary: focus ONLY on the last message separated by '---'. "
-            "State who sent it (full name and email address) and what they said/asked. "
-            "This is the most important field — be specific."
-            "\n\nIMPORTANT for needs_reply and draft_body:"
-            "\n- Set needs_reply=True ONLY if the email explicitly requires "
-            "an action or response from Stefano PERSONALLY."
-            "\n- Check the last message content and context carefully."
-            "\n- If the email is addressed to stefano@chino.io or the company, "
-            "it likely does NOT need a personal reply from Stefano."
-            "\n- If the email is informational, automated, or a newsletter, "
-            "set needs_reply=False."
-            "\n- Only create a draft if Stefano needs to take personal action."
-            "\n\nIMPORTANT for is_mailing_list:"
-            "\n- Set is_mailing_list=True if the email is clearly a mailing list, "
-            "newsletter, marketing email, or automated bulk sender."
-            "\n- Examples: promotional emails, marketing campaigns, automated "
-            "service notifications, mass mailings, newsletters."
-            "\n- If marked as mailing list, the sender will be automatically "
-            "excluded from future processing."
-            "\n\nIMPORTANT calendar/invite rules:"
-            "\n- Email di accettazione invito (Accepted, ha accettato, will attend, etc.): urgenza 1"
-            "\n- Email di declino invito (Declined, ha rifiutato, won't attend, etc.): urgenza 1"
-            "\n- Aggiornamenti generici di calendario (reminder, invite forwarded, etc.): urgenza 1"
-            "\n- Cancellazione di un meeting: urgenza 4"
-            "\n- Riprogrammazione (reschedule) di un meeting che avviene nelle prossime 6 ore: urgenza 4"
-            "\n- Riprogrammazione di un meeting lontano nel tempo: urgenza 1"
-            "\n\nBe concise and professional."
-        )
-
+        system_prompt = DEFAUL_SYSTEM_PROMPT
         if self.custom_rules:
             system_prompt += (
                 "\n\nIMPORTANT: Follow these custom evaluation rules "
