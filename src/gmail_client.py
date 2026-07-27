@@ -751,11 +751,11 @@ class GmailClient:
         except HttpError as e:
             print(f"⚠️ Errore rimozione label da thread {thread_id[:8]}...: {e}")
 
-    def mark_as_read(self, thread_id: str, target_label: str) -> bool:
-        """Mark thread as read and add target label.
+    def label_thread(self, thread_id: str, target_label: str) -> bool:
+        """Add target label to thread, leaving read/unread state untouched.
 
         Args:
-            thread_id: The thread ID to mark as read.
+            thread_id: The thread ID to label.
             target_label: The label to add (e.g., 'janus').
 
         Returns:
@@ -765,7 +765,6 @@ class GmailClient:
             label_id = self._get_or_create_label(target_label)
             body = {
                 "addLabelIds": [label_id],
-                "removeLabelIds": ["UNREAD"],
             }
 
             self.service.users().threads().modify(
@@ -775,7 +774,7 @@ class GmailClient:
             ).execute()
             return True
         except HttpError as error:
-            print(f"❌ Errore marcatura come letto: {error}")
+            print(f"❌ Errore etichettatura: {error}")
             return False
 
     def archive_thread(self, thread_id: str) -> bool:

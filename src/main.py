@@ -174,9 +174,8 @@ def run_janus() -> None:
             # Log mailing list message
             _log_mailing_list_message(thread_id, subject, from_addr)
 
-            # Add janus-ml label and archive
-            gmail.mark_as_read(thread_id, "janus-ml")
-            gmail.archive_thread(thread_id)
+            # Add janus-ml label (no archive)
+            gmail.label_thread(thread_id, "janus-ml")
             mailing_list_count += 1
             continue
 
@@ -196,7 +195,7 @@ def run_janus() -> None:
             )
 
     if mailing_list_count > 0:
-        print(f"📧 {mailing_list_count} messaggi da mailing list archiviati")
+        print(f"📧 {mailing_list_count} messaggi da mailing list etichettati (janus-ml)")
 
     if not filtered_messages:
         end_time = datetime.now()
@@ -283,9 +282,8 @@ def run_janus() -> None:
                 print(f"  📧 Rilevata mailing list: {from_addr}")
                 if gmail.add_to_excluded_senders(from_addr):
                     print(f"  ✅ Sender escluso dalle future elaborazioni")
-                # Archive and mark with janus-ml label
-                gmail.mark_as_read(thread_id, "janus-ml")
-                gmail.archive_thread(thread_id)
+                # Mark with janus-ml label (no archive)
+                gmail.label_thread(thread_id, "janus-ml")
                 _log_mailing_list_message(thread_id, details["subject"], from_addr)
                 processed_count += 1
                 continue
@@ -324,13 +322,8 @@ def run_janus() -> None:
                 details.get("to", "N/A"),
             )
 
-            # Mark thread as read and add janus label
-            gmail.mark_as_read(thread_id, Config.TARGET_LABEL)
-
-            # Archive non-priority emails (urgency 1-2)
-            if urgency <= 2:
-                gmail.archive_thread(thread_id)
-                print(f"  📦 Archiviato (non prioritario)")
+            # Mark thread as read and add janus label (no archive)
+            gmail.label_thread(thread_id, Config.TARGET_LABEL)
 
             processed_count += 1
 
